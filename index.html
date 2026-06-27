@@ -34,7 +34,17 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        .user-area { display: flex; align-items: center; gap: 12px; }
         .user-name { font-weight: 500; cursor: pointer; }
+        .logout-btn {
+            padding: 6px 14px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
         .container {
             padding-top: 100px;
             max-width: 1100px;
@@ -77,7 +87,11 @@
 <body>
     <header>
         <div class="logo">ACEPORTAL</div>
-        <span id="user-name" class="user-name" onclick="showProfile()">Gast</span>
+        <div class="user-area">
+            <span id="user-name" class="user-name" onclick="showProfile()">Gast</span>
+            <button id="logout-btn" class="logout-btn" onclick="signOut()" style="display:none;">Abmelden</button>
+            <button onclick="showLoginModal()" style="padding:8px 16px; background:#4285f4; color:white; border:none; border-radius:8px; cursor:pointer;">Anmelden</button>
+        </div>
     </header>
 
     <div class="container">
@@ -99,8 +113,8 @@
             <h2>E-Mail Anmeldung</h2>
             
             <input type="email" id="email" placeholder="E-Mail-Adresse" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
-            <input type="password" id="password" placeholder="Passwort" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
-            <input type="text" id="nickname" placeholder="Nickname (optional)" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
+            <input type="password" id="password" placeholder="Passwort (mind. 6 Zeichen)" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
+            <input type="text" id="nickname" placeholder="Nickname (Pflicht)" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
             
             <button onclick="signUp()" style="width:100%; padding:14px; background:#00ff88; color:black; border:none; border-radius:8px; margin:15px 0;">Registrieren</button>
             <button onclick="signIn()" style="width:100%; padding:14px; background:#555; color:white; border:none; border-radius:8px;">Anmelden</button>
@@ -139,15 +153,15 @@
             const password = document.getElementById('password').value;
             const nickname = document.getElementById('nickname').value.trim();
 
+            if (!nickname) return alert("Bitte gib einen Nickname ein!");
             if (!email || !password) return alert("E-Mail und Passwort sind erforderlich!");
 
             auth.createUserWithEmailAndPassword(email, password)
                 .then((result) => {
-                    if (nickname) {
-                        result.user.updateProfile({ displayName: nickname });
-                    }
+                    result.user.updateProfile({ displayName: nickname });
                     currentUser = result.user;
-                    document.getElementById('user-name').textContent = nickname || email;
+                    document.getElementById('user-name').textContent = nickname;
+                    document.getElementById('logout-btn').style.display = 'inline-block';
                     closeModal();
                     alert("Registrierung erfolgreich!");
                     updateLeaderboard();
@@ -163,6 +177,7 @@
                 .then((result) => {
                     currentUser = result.user;
                     document.getElementById('user-name').textContent = result.user.displayName || email;
+                    document.getElementById('logout-btn').style.display = 'inline-block';
                     closeModal();
                     alert("Erfolgreich angemeldet!");
                     updateLeaderboard();
@@ -176,6 +191,15 @@
             document.getElementById('user-name').textContent = nickname + " (Guest)";
             closeModal();
             updateLeaderboard();
+        }
+
+        function signOut() {
+            auth.signOut().then(() => {
+                currentUser = null;
+                document.getElementById('user-name').textContent = "Gast";
+                document.getElementById('logout-btn').style.display = 'none';
+                updateLeaderboard();
+            });
         }
 
         function showProfile() {
@@ -195,7 +219,7 @@
                 div.className = 'rank-item my-score';
                 div.innerHTML = `
                     <div class="rank-pos">★</div>
-                    <div class="rank-name">${currentUser ? (currentUser.displayName || currentUser.email) : 'Du'}</div>
+                    <div class="rank-name">${currentUser ? (currentUser.displayName || 'Du') : 'Du'}</div>
                     <div class="rank-time">${myBestTime.toFixed(2)}s</div>
                 `;
                 container.appendChild(div);
@@ -204,11 +228,11 @@
             }
         }
 
-        // Auto-Check ob schon eingeloggt
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUser = user;
                 document.getElementById('user-name').textContent = user.displayName || user.email;
+                document.getElementById('logout-btn').style.display = 'inline-block';
                 updateLeaderboard();
             }
         });
