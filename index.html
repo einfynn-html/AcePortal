@@ -6,7 +6,6 @@
     <title>AcePortal</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Press+Start+2P&display=swap');
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #0a0a14;
@@ -15,14 +14,12 @@
             min-height: 100vh;
             overflow: hidden;
         }
-
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 30px 60px;
         }
-
         .logo {
             font-family: 'Press Start 2P', cursive;
             font-size: 3.8rem;
@@ -32,7 +29,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
         .name-btn {
             background: rgba(255,255,255,0.1);
             color: white;
@@ -42,14 +38,16 @@
             font-size: 1.1rem;
             cursor: pointer;
             transition: all 0.3s;
+            max-width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
-
         .name-btn:hover {
             background: #00ffcc;
             color: black;
             border-color: #00ffcc;
         }
-
         .main {
             display: flex;
             justify-content: center;
@@ -57,7 +55,6 @@
             padding: 80px 40px;
             flex-wrap: wrap;
         }
-
         .card {
             width: 320px;
             height: 380px;
@@ -66,21 +63,19 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 600;
             color: #aaa;
             cursor: pointer;
             transition: all 0.4s;
             border: 3px solid #2a2a4a;
         }
-
         .card:hover {
             transform: translateY(-20px) scale(1.05);
             border-color: #00ffcc;
             color: #00ffcc;
             box-shadow: 0 0 60px rgba(0, 255, 204, 0.3);
         }
-
         .game-card { color: #00ffcc; }
         .scoreboard-card { color: #ff00cc; }
     </style>
@@ -88,31 +83,35 @@
 <body>
     <div class="header">
         <div class="logo">ACEPORTAL</div>
-        <button class="name-btn" onclick="setName()">Namething</button>
+        <button class="name-btn" onclick="setName()" id="nameBtn">Namething</button>
     </div>
-
     <div class="main">
         <div class="card game-card" onclick="startGame()">
-            Game
+            GAME
         </div>
         <div class="card scoreboard-card" onclick="showScoreboard()">
-            Scoreboard
+            RANGLISTE
         </div>
     </div>
 
     <script>
         let currentPlayer = localStorage.getItem('aceportal_current_player') || "Player";
 
+        function updateNameButton() {
+            document.getElementById('nameBtn').textContent = currentPlayer;
+        }
+
         function setName() {
             let name = prompt("Gib deinen Spielernamen ein:", currentPlayer);
             if (name && name.trim() !== "") {
                 currentPlayer = name.trim();
                 localStorage.setItem('aceportal_current_player', currentPlayer);
+                updateNameButton();
             }
         }
 
         function startGame() {
-            if (!localStorage.getItem('aceportal_current_player')) {
+            if (currentPlayer === "Player") {
                 alert("Bitte gib zuerst einen Namen ein!");
                 return;
             }
@@ -120,9 +119,11 @@
         }
 
         function showScoreboard() {
-            window.location.href = 'index.html#scoreboard'; // Später erweiterbar
-            alert("Scoreboard wird in Kürze hier angezeigt.\n\nAktuell: " + currentPlayer);
+            window.location.href = 'scoreboard.html';
         }
+
+        // Name beim Laden anzeigen
+        window.onload = updateNameButton;
     </script>
 </body>
 </html>
