@@ -1,1 +1,194 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AcePortal - Rangliste</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Press+Start+2P&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a14;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 60px;
+            background: rgba(10, 10, 20, 0.95);
+        }
+        .logo {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 3.2rem;
+            font-weight: 700;
+            letter-spacing: 4px;
+            background: linear-gradient(90deg, #00ffcc, #ff00cc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .name-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 2px solid #555;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .name-btn:hover {
+            background: #00ffcc;
+            color: black;
+            border-color: #00ffcc;
+        }
+        .main {
+            padding: 40px 60px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-family: 'Press Start 2P', cursive;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.8rem;
+            background: linear-gradient(90deg, #00ffcc, #ff00cc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .scoreboard {
+            background: #1a1a2e;
+            border-radius: 24px;
+            padding: 30px;
+            border: 3px solid #2a2a4a;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 18px 20px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        th {
+            color: #00ffcc;
+            font-family: 'Press Start 2P', cursive;
+        }
+        tr:hover {
+            background: rgba(0, 255, 204, 0.1);
+        }
+        .rank {
+            font-family: 'Press Start 2P', cursive;
+            color: #ff00cc;
+            width: 90px;
+        }
+        .top3 td { 
+            background: rgba(255, 215, 0, 0.2); 
+            font-weight: 600; 
+        }
+        .back-btn {
+            display: block;
+            margin: 40px auto;
+            padding: 16px 50px;
+            font-size: 1.3rem;
+            background: #00ffcc;
+            color: black;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .empty {
+            text-align: center;
+            padding: 80px 20px;
+            color: #666;
+            font-size: 1.4rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">ACEPORTAL</div>
+        <button class="name-btn" onclick="setName()" id="nameBtn">Namething</button>
+    </div>
 
+    <div class="main">
+        <h1>SCOREBOARD — TOP 25 (LETZTE 7 TAGE)</h1>
+        <div class="scoreboard">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="rank">RANG</th>
+                        <th>SPIELER</th>
+                        <th>SCORE</th>
+                        <th>DATUM</th>
+                    </tr>
+                </thead>
+                <tbody id="scoreBody"></tbody>
+            </table>
+            <div id="emptyMsg" class="empty" style="display:none;">
+                Noch keine Einträge in den letzten 7 Tagen.<br>
+                Spiele jetzt und setze dich an die Spitze!
+            </div>
+        </div>
+        <button class="back-btn" onclick="window.location.href='index.html'">← ZURÜCK ZUM MENÜ</button>
+    </div>
+
+    <script>
+        let currentPlayer = localStorage.getItem('aceportal_current_player') || "Player";
+
+        function updateNameButton() {
+            document.getElementById('nameBtn').textContent = currentPlayer;
+        }
+
+        function setName() {
+            let name = prompt("Gib deinen Spielernamen ein:", currentPlayer);
+            if (name && name.trim() !== "") {
+                currentPlayer = name.trim();
+                localStorage.setItem('aceportal_current_player', currentPlayer);
+                updateNameButton();
+            }
+        }
+
+        function loadScoreboard() {
+            let scores = JSON.parse(localStorage.getItem('aceportal_scores')) || [];
+            const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+            scores = scores
+                .filter(s => s.timestamp > sevenDaysAgo)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 25);
+
+            const tbody = document.getElementById('scoreBody');
+            tbody.innerHTML = '';
+
+            if (scores.length === 0) {
+                document.getElementById('emptyMsg').style.display = 'block';
+                return;
+            }
+
+            scores.forEach((entry, i) => {
+                const date = new Date(entry.timestamp);
+                const row = document.createElement('tr');
+                if (i < 3) row.classList.add('top3');
+
+                row.innerHTML = `
+                    <td class="rank">#${i+1}</td>
+                    <td>${entry.name}</td>
+                    <td><strong>${entry.score}</strong></td>
+                    <td>${date.toLocaleDateString('de-DE')} ${date.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        window.onload = () => {
+            updateNameButton();
+            loadScoreboard();
+        };
+    </script>
+</body>
+</html>
