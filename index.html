@@ -3,155 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AcePortal</title>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <title>AcePortal - Speedrun Parkour</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Press+Start+2P&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: radial-gradient(circle at center, #1a0033, #0a001a);
-            min-height: 100vh;
+            background: #0a0a0f;
+            color: #e0e0ff;
             font-family: 'Inter', sans-serif;
-            color: white;
-            margin: 0;
+            min-height: 100vh;
+            overflow: hidden;
         }
         header {
             position: fixed;
             top: 0; left: 0; right: 0;
+            background: rgba(10,10,20,0.95);
+            border-bottom: 1px solid #00ffcc;
             padding: 15px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(10,10,20,0.9);
-            backdrop-filter: blur(10px);
             z-index: 100;
         }
-        .logo { font-size: 2rem; font-weight: 800; background: linear-gradient(#00ffcc, #ff00cc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .glass {
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.18);
-            border-radius: 28px;
-            padding: 50px 40px;
-            max-width: 460px;
-            margin: 120px auto;
+        .logo {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, #00ffcc, #ff00aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-name {
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .login-btn {
+            padding: 8px 18px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .container {
+            padding-top: 100px;
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            gap: 40px;
+            padding: 120px 40px 40px;
+        }
+        .game-section { flex: 1; }
+        .leaderboard {
+            width: 380px;
+            background: rgba(20,20,40,0.95);
+            border: 2px solid #00ffcc;
+            border-radius: 20px;
+            padding: 25px;
+            height: fit-content;
+        }
+        .leaderboard h2 {
+            color: #00ffcc;
+            margin-bottom: 20px;
             text-align: center;
         }
-        input, button {
-            width: 100%;
-            padding: 14px;
-            margin: 10px 0;
-            border-radius: 12px;
-            border: none;
+        .rank-item {
+            display: flex;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            margin: 8px 0;
+            padding: 12px 15px;
+            border-radius: 10px;
         }
-        input { background: rgba(255,255,255,0.1); color: white; }
-        .btn-primary { background: #00ff88; color: black; font-weight: bold; }
-        .btn-guest { background: #666; color: white; }
+        .rank-pos { font-weight: bold; width: 40px; color: #ffd700; }
+        .rank-name { flex: 1; }
+        .rank-time { font-family: monospace; color: #00ffcc; }
+        .top1 { background: linear-gradient(90deg, #ffd700, #ffaa00) !important; color: black; }
+        .btn {
+            display: inline-block;
+            padding: 18px 60px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #00ffcc, #00ccaa);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 15px 30px rgba(0, 255, 204, 0.5);
+        }
     </style>
 </head>
 <body>
     <header>
         <div class="logo">ACEPORTAL</div>
-        <div id="user-header" style="font-weight:500; cursor:pointer;" onclick="showProfile()">
-            Gast
+        <div class="user-area">
+            <span id="user-name" class="user-name" onclick="showProfile()">Gast</span>
+            <button class="login-btn" onclick="showLoginModal()">Anmelden / Registrieren</button>
         </div>
     </header>
 
-    <div class="glass">
-        <h2>Willkommen bei AcePortal</h2>
-        <p style="margin:20px 0 30px; color:#bbb;">Speedrun Parkour</p>
+    <div class="container">
+        <div class="game-section">
+            <h1 style="font-size:4rem; margin-bottom:10px;">SPEEDRUN PARKOUR</h1>
+            <p style="font-size:1.4rem; color:#a0a0ff; margin-bottom:40px;">Wie schnell kannst du die Lava überleben?</p>
+            <a href="game.html" class="btn">JETZT SPIELEN →</a>
+            <p style="margin-top:30px; color:#777; font-size:0.95rem;">
+                Tipp: Doppel-Sprung + präzises Timing sind der Schlüssel
+            </p>
+        </div>
 
-        <input type="email" id="email" placeholder="E-Mail-Adresse" />
-        <input type="password" id="password" placeholder="Passwort" />
-        <input type="text" id="nickname" placeholder="Nickname (optional)" />
+        <div class="leaderboard">
+            <h2>🏆 WELT-RANGLISTE</h2>
+            <div id="leaderboard"></div>
+        </div>
+    </div>
 
-        <button onclick="signUpWithEmail()" class="btn-primary">Registrieren</button>
-        <button onclick="signInWithEmail()" class="btn-primary" style="background:#555;">Anmelden</button>
-        
-        <button onclick="guestLogin()" class="btn-guest">Als Gast spielen</button>
+    <!-- Login Modal -->
+    <div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:200; align-items:center; justify-content:center;">
+        <div style="background:#1a1a2e; padding:40px; border-radius:20px; width:400px; text-align:center;">
+            <h2>Anmelden / Registrieren</h2>
+            <input type="text" id="nickname" placeholder="Nickname" style="width:100%; padding:12px; margin:15px 0; background:#222; border:none; color:white; border-radius:8px;">
+            <input type="email" id="email" placeholder="E-Mail" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
+            <input type="password" id="password" placeholder="Passwort" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
+            
+            <button onclick="registerOrLogin()" style="width:100%; padding:14px; background:#00ff88; color:black; border:none; border-radius:8px; margin:15px 0;">Registrieren / Anmelden</button>
+            <button onclick="guestLogin()" style="width:100%; padding:14px; background:#666; color:white; border:none; border-radius:8px;">Als Gast spielen</button>
+            <button onclick="closeModal()" style="margin-top:15px; color:#aaa;">Schließen</button>
+        </div>
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyA8UYsuQGkoPO6jqMgXtL0zX-iNmvA5pA0",
-            authDomain: "aceportal-xyz.firebaseapp.com",   // ← ANPASSEN
-            projectId: "aceportal-xyz",                    // ← ANPASSEN
-            storageBucket: "aceportal-xyz.appspot.com",    // ← ANPASSEN
-            messagingSenderId: "123456789",                // ← ANPASSEN
-            appId: "1:123456789:web:xxxxxxxxxxxxxxxx"      // ← ANPASSEN
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-
         let currentUser = null;
 
-        function updateHeader() {
-            const header = document.getElementById('user-header');
-            if (currentUser) {
-                const display = currentUser.displayName || currentUser.email || "Spieler";
-                header.textContent = display;
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
+
+        function registerOrLogin() {
+            const nickname = document.getElementById('nickname').value.trim() || "Spieler";
+            const email = document.getElementById('email').value.trim();
+            
+            if (email) {
+                currentUser = { name: nickname, email: email, isRegistered: true };
             } else {
-                header.textContent = "Gast";
+                currentUser = { name: nickname, isGuest: true };
             }
-        }
-
-        function signUpWithEmail() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const nickname = document.getElementById('nickname').value.trim();
-
-            if (!email || !password) return alert("E-Mail und Passwort erforderlich!");
-
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(result => {
-                    if (nickname) {
-                        result.user.updateProfile({ displayName: nickname });
-                    }
-                    currentUser = result.user;
-                    updateHeader();
-                    alert("Registrierung erfolgreich!");
-                })
-                .catch(err => alert("Fehler: " + err.message));
-        }
-
-        function signInWithEmail() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            auth.signInWithEmailAndPassword(email, password)
-                .then(result => {
-                    currentUser = result.user;
-                    updateHeader();
-                    alert("Erfolgreich angemeldet!");
-                })
-                .catch(err => alert("Fehler: " + err.message));
+            
+            document.getElementById('user-name').textContent = nickname + (currentUser.isGuest ? " (Guest)" : "");
+            closeModal();
+            alert(`Willkommen, ${nickname}!`);
+            updateLeaderboard();
         }
 
         function guestLogin() {
             const nickname = document.getElementById('nickname').value.trim() || "Spieler";
-            currentUser = { displayName: nickname + " (Guest)", isGuest: true };
-            updateHeader();
-            alert(`Willkommen, ${nickname} (Guest)!`);
+            currentUser = { name: nickname, isGuest: true };
+            document.getElementById('user-name').textContent = nickname + " (Guest)";
+            closeModal();
+            updateLeaderboard();
         }
 
         function showProfile() {
             if (currentUser) {
-                alert(`Angemeldet als: ${currentUser.displayName || currentUser.email}`);
+                alert(`Angemeldet als: ${currentUser.name} ${currentUser.isGuest ? '(Guest)' : ''}`);
             } else {
                 alert("Du bist als Gast unterwegs.");
             }
         }
 
-        // Auto-Login Check
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                currentUser = user;
-                updateHeader();
-            }
-        });
+        // Fake Leaderboard
+        let scores = [
+            { name: "ProGamer42", time: 18.45, country: "🇩🇪" },
+            { name: "ShadowDash", time: 19.87, country: "🇰🇷" },
+            { name: "LavaRunner", time: 21.23, country: "🇧🇷" },
+        ];
+
+        function updateLeaderboard() {
+            const container = document.getElementById('leaderboard');
+            container.innerHTML = '';
+            scores.forEach((entry, index) => {
+                const div = document.createElement('div');
+                div.className = `rank-item ${index === 0 ? 'top1' : ''}`;
+                div.innerHTML = `
+                    <div class="rank-pos">#${index+1}</div>
+                    <div class="rank-name">${entry.country} ${entry.name}</div>
+                    <div class="rank-time">${entry.time.toFixed(2)}s</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        window.onload = () => {
+            updateLeaderboard();
+        };
     </script>
 </body>
 </html>
