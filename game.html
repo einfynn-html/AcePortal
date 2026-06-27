@@ -3,165 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AcePortal - Speedrun Parkour</title>
+    <title>AcePortal - Game</title>
     <style>
-        body { margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh; background:#111; color:white; overflow:hidden; }
-        canvas { border:4px solid #0f0; image-rendering:pixelated; box-shadow:0 0 30px #0f0; }
-        #ui { position:absolute; top:15px; left:15px; z-index:10; background:rgba(0,0,0,0.9); padding:12px 20px; border-radius:10px; font-size:17px; }
-        button { padding:8px 16px; margin:5px 3px; background:#0f0; color:black; border:none; border-radius:5px; cursor:pointer; font-weight:bold; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Press+Start+2P&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a14;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            text-align: center;
+            min-height: 100vh;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(10,10,20,0.95);
+        }
+        .logo {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 2.5rem;
+            color: #00ffcc;
+        }
+        .name-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 2px solid #555;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .name-btn:hover {
+            background: #00ffcc;
+            color: black;
+            border-color: #00ffcc;
+        }
+        .game-area {
+            margin: 40px auto;
+            width: 620px;
+            height: 420px;
+            background: #1a1a2e;
+            border: 5px solid #00ffcc;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .target {
+            position: absolute;
+            width: 85px;
+            height: 85px;
+            background: linear-gradient(45deg, #ff00cc, #00ffcc);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: bold;
+            box-shadow: 0 0 35px #ff00cc;
+            transition: all 0.08s;
+            user-select: none;
+        }
+        .info {
+            margin: 25px auto;
+            font-size: 1.5rem;
+        }
+        button {
+            margin: 12px;
+            padding: 14px 38px;
+            font-size: 1.25rem;
+            background: #00ffcc;
+            color: black;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <div id="ui">
-        <div>Spieler: <strong id="playerNameDisplay">---</strong></div>
-        <div>Zeit: <span id="timer">0.000</span> s</div>
-        <div id="status">Bereit</div>
-        <button onclick="startGame()">RESTART</button>
-        <button onclick="window.location.href='index.html'">← Menü</button>
+    <div class="header">
+        <div class="logo">ACEPORTAL</div>
+        <button class="name-btn" onclick="setName()" id="nameBtn">Namething</button>
     </div>
 
-    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    <div class="info">
+        <h1>30 SEKUNDEN CLICKER</h1>
+        <p>Klicke so oft wie möglich auf den leuchtenden Kreis!</p>
+        <p>Zeit: <strong id="time">30</strong>s | Punkte: <strong id="score">0</strong></p>
+    </div>
+
+    <div class="game-area" id="gameArea">
+        <div class="target" id="target">★</div>
+    </div>
+
+    <button onclick="startGame()">NEUES SPIEL STARTEN</button>
+    <button onclick="window.location.href='index.html'">← MENÜ</button>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        let currentPlayer = localStorage.getItem('aceportal_current_player') || "Player";
 
-        let player = {x:80, y:380, width:30, height:40, vx:0, vy:0, speed:5.8, jump:-15.8, gravity:0.72, grounded:false, doubleJump:true};
-        let cameraX = 0, gameTime = 0, timerInterval, isRunning = false;
-        let currentPlayer = "Unbekannt";
-
-        let platforms = [{x:0,y:420,w:220,h:80},{x:280,y:340,w:110,h:20},{x:460,y:260,w:130,h:20},{x:650,y:370,w:90,h:20},{x:820,y:220,w:140,h:20},{x:1030,y:310,w:100,h:20},{x:1220,y:180,w:110,h:20},{x:1400,y:340,w:95,h:20},{x:1580,y:250,w:120,h:20},{x:1780,y:380,w:220,h:80}];
-        let goal = {x:1920, y:280, w:40, h:100};
-        let hazards = [{x:0, y:480, w:2500, h:40}];
-        let keys = {};
-
-              function saveScore(name, time) {
-            let scores = JSON.parse(localStorage.getItem('aceportal_scores') || '[]');
-            scores.push({ 
-                name: name, 
-                time: parseFloat(time), 
-                date: new Date().toISOString() 
-            });
-            localStorage.setItem('aceportal_scores', JSON.stringify(scores));
-        }
-        function draw() {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = '#111133'; ctx.fillRect(0,0,canvas.width,canvas.height);
-
-            ctx.fillStyle = '#0a0';
-            for (let p of platforms) ctx.fillRect(p.x - cameraX, p.y, p.w, p.h);
-
-            ctx.fillStyle = '#c00';
-            for (let h of hazards) ctx.fillRect(h.x - cameraX, h.y, h.w, h.h);
-
-            ctx.fillStyle = '#0f0';
-            ctx.fillRect(goal.x - cameraX, goal.y, goal.w, goal.h);
-
-            ctx.fillStyle = '#0ff';
-            ctx.fillRect(player.x - cameraX, player.y, player.width, player.height);
+        function updateNameButton() {
+            document.getElementById('nameBtn').textContent = currentPlayer;
         }
 
-        function update() {
-            if (!isRunning) return;
-
-            player.vx = 0;
-            if (keys['ArrowLeft'] || keys['a'] || keys['A']) player.vx = -player.speed;
-            if (keys['ArrowRight'] || keys['d'] || keys['D']) player.vx = player.speed;
-            player.x += player.vx;
-
-            player.vy += player.gravity;
-            player.y += player.vy;
-            player.grounded = false;
-
-            for (let p of platforms) {
-                if (player.x < p.x + p.w && player.x + player.width > p.x &&
-                    player.y < p.y + p.h && player.y + player.height > p.y) {
-                    if (player.vy > 0) {
-                        player.y = p.y - player.height;
-                        player.vy = 0;
-                        player.grounded = true;
-                        player.doubleJump = true;
-                    }
-                }
+        function setName() {
+            let name = prompt("Gib deinen Spielernamen ein:", currentPlayer);
+            if (name && name.trim() !== "") {
+                currentPlayer = name.trim();
+                localStorage.setItem('aceportal_current_player', currentPlayer);
+                updateNameButton();
             }
-
-            for (let h of hazards) {
-                if (player.x < h.x + h.w && player.x + player.width > h.x &&
-                    player.y < h.y + h.h && player.y + player.height > h.y) {
-                    resetPlayer();
-                    return;
-                }
-            }
-
-            if (player.x < goal.x + goal.w && player.x + player.width > goal.x &&
-                player.y < goal.y + goal.h && player.y + player.height > goal.y) {
-                endRun(true);
-            }
-
-            cameraX = Math.max(0, Math.min(player.x - 200, 2000));
-            if (player.y > 650) resetPlayer();
         }
 
-        function gameLoop() {
-            update();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
+        let score = 0;
+        let timeLeft = 30;
+        let timer;
+        let gameRunning = false;
+        let target = document.getElementById('target');
+        let gameArea = document.getElementById('gameArea');
 
-        function startTimer() {
-            if (timerInterval) clearInterval(timerInterval);
-            gameTime = 0;
-            document.getElementById('timer').textContent = '0.000';
-            timerInterval = setInterval(() => {
-                gameTime += 0.016;
-                document.getElementById('timer').textContent = gameTime.toFixed(3);
-            }, 16);
+        function randomPosition() {
+            const maxX = gameArea.clientWidth - target.clientWidth - 20;
+            const maxY = gameArea.clientHeight - target.clientHeight - 20;
+            const x = Math.random() * maxX;
+            const y = Math.random() * maxY;
+            target.style.left = `${x}px`;
+            target.style.top = `${y}px`;
         }
 
         function startGame() {
-            isRunning = true;
-            document.getElementById('status').innerHTML = 'Läuft!';
-            resetPlayer();
-            startTimer();
-        }
+            if (gameRunning) return;
+            if (currentPlayer === "Player") {
+                alert("Bitte gib zuerst einen Namen ein!");
+                return;
+            }
 
-        function resetPlayer() {
-            player.x = 80; player.y = 380; player.vx = 0; player.vy = 0; cameraX = 0;
-        }
+            score = 0;
+            timeLeft = 30;
+            gameRunning = true;
+            document.getElementById('score').textContent = score;
+            document.getElementById('time').textContent = timeLeft;
 
-        function endRun(success) {
-            isRunning = false;
-            clearInterval(timerInterval);
-            if (success) {
-                const time = parseFloat(gameTime.toFixed(3));
-                document.getElementById('status').innerHTML = `🎉 <strong>${time}s</strong>`;
+            randomPosition();
 
-                if (currentPlayer !== "Unbekannt") {
-                    saveScore(currentPlayer, time);
+            if (timer) clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('time').textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    endGame();
                 }
+            }, 1000);
+        }
+
+        function endGame() {
+            clearInterval(timer);
+            gameRunning = false;
+            target.style.left = '50%';
+            target.style.top = '50%';
+
+            if (score > 0) {
+                saveScore(score);
+            } else {
+                alert(`Zeit vorbei!\n\nDu hast ${score} Punkte erreicht.`);
             }
         }
 
-        window.addEventListener('keydown', e => {
-            keys[e.key] = true;
-            if (e.key === ' ' && isRunning) {
-                e.preventDefault();
-                if (player.grounded) {
-                    player.vy = player.jump;
-                    player.grounded = false;
-                } else if (player.doubleJump) {
-                    player.vy = player.jump * 0.9;
-                    player.doubleJump = false;
-                }
+        function saveScore(finalScore) {
+            let scores = JSON.parse(localStorage.getItem('aceportal_scores')) || [];
+            
+            scores.push({
+                name: currentPlayer,
+                score: finalScore,
+                timestamp: Date.now()
+            });
+
+            const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+            scores = scores
+                .filter(s => s.timestamp > sevenDaysAgo)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 50);
+
+            localStorage.setItem('aceportal_scores', JSON.stringify(scores));
+
+            alert(`🎉 Spiel vorbei!\n\nSpieler: ${currentPlayer}\nScore: ${finalScore}\n\nEr wurde in der Rangliste gespeichert!`);
+        }
+
+        // Klick auf Target
+        target.addEventListener('click', () => {
+            if (!gameRunning) return;
+            score += 10;
+            document.getElementById('score').textContent = score;
+            randomPosition();
+        });
+
+        // Klick neben das Target (Strafe)
+        gameArea.addEventListener('click', (e) => {
+            if (e.target.id !== 'target' && gameRunning) {
+                score = Math.max(0, score - 5);
+                document.getElementById('score').textContent = score;
             }
         });
-        window.addEventListener('keyup', e => keys[e.key] = false);
 
-        window.onload = () => {
-            currentPlayer = localStorage.getItem('aceportal_current_player') || "Unbekannt";
-            document.getElementById('playerNameDisplay').textContent = currentPlayer;
-            gameLoop();
-        };
+        // Name beim Laden aktualisieren
+        window.onload = updateNameButton;
     </script>
 </body>
 </html>
