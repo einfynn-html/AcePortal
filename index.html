@@ -82,8 +82,12 @@
         }
         .rank-pos { font-weight: bold; width: 40px; color: #ffd700; }
         .rank-name { flex: 1; }
-        .rank-time { font-family: monospace; color: #00ffcc; }
+        .rank-time { font-family: monospace; color: #00ffcc; font-weight: bold; }
         .top1 { background: linear-gradient(90deg, #ffd700, #ffaa00) !important; color: black; }
+        .my-score {
+            border: 2px solid #00ffcc;
+            background: rgba(0, 255, 100, 0.1) !important;
+        }
         .btn {
             display: inline-block;
             padding: 18px 60px;
@@ -108,7 +112,7 @@
         <div class="logo">ACEPORTAL</div>
         <div class="user-area">
             <span id="user-name" class="user-name" onclick="showProfile()">Gast</span>
-            <button class="login-btn" onclick="showLoginModal()">Anmelden / Registrieren</button>
+            <button class="login-btn" onclick="showLoginModal()">Anmelden</button>
         </div>
     </header>
 
@@ -117,9 +121,6 @@
             <h1 style="font-size:4rem; margin-bottom:10px;">SPEEDRUN PARKOUR</h1>
             <p style="font-size:1.4rem; color:#a0a0ff; margin-bottom:40px;">Wie schnell kannst du die Lava überleben?</p>
             <a href="game.html" class="btn">JETZT SPIELEN →</a>
-            <p style="margin-top:30px; color:#777; font-size:0.95rem;">
-                Tipp: Doppel-Sprung + präzises Timing sind der Schlüssel
-            </p>
         </div>
 
         <div class="leaderboard">
@@ -129,21 +130,19 @@
     </div>
 
     <!-- Login Modal -->
-    <div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:200; align-items:center; justify-content:center;">
-        <div style="background:#1a1a2e; padding:40px; border-radius:20px; width:400px; text-align:center;">
-            <h2>Anmelden / Registrieren</h2>
-            <input type="text" id="nickname" placeholder="Nickname" style="width:100%; padding:12px; margin:15px 0; background:#222; border:none; color:white; border-radius:8px;">
-            <input type="email" id="email" placeholder="E-Mail" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
-            <input type="password" id="password" placeholder="Passwort" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
-            
-            <button onclick="registerOrLogin()" style="width:100%; padding:14px; background:#00ff88; color:black; border:none; border-radius:8px; margin:15px 0;">Registrieren / Anmelden</button>
+    <div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:200; align-items:center; justify-content:center;">
+        <div style="background:#1a1a2e; padding:40px; border-radius:20px; width:400px;">
+            <h2 style="margin-bottom:20px;">Anmelden / Gast</h2>
+            <input type="text" id="nickname" placeholder="Dein Name / Nickname" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
+            <button onclick="loginUser()" style="width:100%; padding:14px; background:#00ff88; color:black; border:none; border-radius:8px; margin:15px 0;">Bestätigen</button>
             <button onclick="guestLogin()" style="width:100%; padding:14px; background:#666; color:white; border:none; border-radius:8px;">Als Gast spielen</button>
-            <button onclick="closeModal()" style="margin-top:15px; color:#aaa;">Schließen</button>
+            <button onclick="closeModal()" style="margin-top:10px; color:#aaa;">Schließen</button>
         </div>
     </div>
 
     <script>
         let currentUser = null;
+        let myBestTime = localStorage.getItem('speedrunBest') ? parseFloat(localStorage.getItem('speedrunBest')) : null;
 
         function showLoginModal() {
             document.getElementById('loginModal').style.display = 'flex';
@@ -153,26 +152,18 @@
             document.getElementById('loginModal').style.display = 'none';
         }
 
-        function registerOrLogin() {
-            const nickname = document.getElementById('nickname').value.trim() || "Spieler";
-            const email = document.getElementById('email').value.trim();
-            
-            if (email) {
-                currentUser = { name: nickname, email: email, isRegistered: true };
-            } else {
-                currentUser = { name: nickname, isGuest: true };
-            }
-            
-            document.getElementById('user-name').textContent = nickname + (currentUser.isGuest ? " (Guest)" : "");
+        function loginUser() {
+            const name = document.getElementById('nickname').value.trim() || "Spieler";
+            currentUser = { name: name, isGuest: false };
+            document.getElementById('user-name').textContent = name;
             closeModal();
-            alert(`Willkommen, ${nickname}!`);
             updateLeaderboard();
         }
 
         function guestLogin() {
-            const nickname = document.getElementById('nickname').value.trim() || "Spieler";
-            currentUser = { name: nickname, isGuest: true };
-            document.getElementById('user-name').textContent = nickname + " (Guest)";
+            const name = document.getElementById('nickname').value.trim() || "Spieler";
+            currentUser = { name: name, isGuest: true };
+            document.getElementById('user-name').textContent = name + " (Guest)";
             closeModal();
             updateLeaderboard();
         }
@@ -180,22 +171,22 @@
         function showProfile() {
             if (currentUser) {
                 alert(`Angemeldet als: ${currentUser.name} ${currentUser.isGuest ? '(Guest)' : ''}`);
-            } else {
-                alert("Du bist als Gast unterwegs.");
             }
         }
 
-        // Fake Leaderboard
-        let scores = [
-            { name: "ProGamer42", time: 18.45, country: "🇩🇪" },
-            { name: "ShadowDash", time: 19.87, country: "🇰🇷" },
-            { name: "LavaRunner", time: 21.23, country: "🇧🇷" },
-        ];
-
+        // Leaderboard mit eigener Zeit
         function updateLeaderboard() {
             const container = document.getElementById('leaderboard');
             container.innerHTML = '';
-            scores.forEach((entry, index) => {
+
+            // Fake globale Rangliste
+            const globalScores = [
+                { name: "ProGamer42", time: 18.45, country: "🇩🇪" },
+                { name: "ShadowDash", time: 19.87, country: "🇰🇷" },
+                { name: "LavaRunner", time: 21.23, country: "🇧🇷" },
+            ];
+
+            globalScores.forEach((entry, index) => {
                 const div = document.createElement('div');
                 div.className = `rank-item ${index === 0 ? 'top1' : ''}`;
                 div.innerHTML = `
@@ -205,6 +196,18 @@
                 `;
                 container.appendChild(div);
             });
+
+            // Eigene beste Zeit anzeigen
+            if (myBestTime) {
+                const myDiv = document.createElement('div');
+                myDiv.className = 'rank-item my-score';
+                myDiv.innerHTML = `
+                    <div class="rank-pos">★</div>
+                    <div class="rank-name">${currentUser ? currentUser.name : 'Du'} ${currentUser && currentUser.isGuest ? '(Guest)' : ''}</div>
+                    <div class="rank-time">${myBestTime.toFixed(2)}s</div>
+                `;
+                container.appendChild(myDiv);
+            }
         }
 
         window.onload = () => {
