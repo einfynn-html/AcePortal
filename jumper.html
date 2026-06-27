@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AcePortal - Jumper</title>
+    <style>
+        body {
+            margin: 0;
+            background: #0a0a14;
+            font-family: 'Press Start 2P', cursive;
+            color: white;
+            text-align: center;
+            overflow: hidden;
+        }
+        canvas {
+            image-rendering: pixelated;
+            border: 4px solid #00ffcc;
+            margin-top: 20px;
+        }
+        .header {
+            padding: 15px;
+            background: rgba(10,10,20,0.95);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        button {
+            padding: 12px 30px;
+            margin: 10px;
+            background: #00ffcc;
+            color: black;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Press Start 2P', cursive;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>ACE JUMPER</div>
+        <div>Spieler: <strong id="playerName"></strong> | Score: <strong id="scoreDisplay">0</strong></div>
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+    <div>
+        <button onclick="startGame()">NEUES SPIEL</button>
+        <button onclick="window.location.href='index.html'">← MENÜ</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let currentPlayer = localStorage.getItem('aceportal_current_player') || "Player";
+        document.getElementById('playerName').textContent = currentPlayer;
+
+        let player = { x: 100, y: 300, width: 40, height: 60, vy: 0, jumping: false };
+        let gravity = 0.8;
+        let jumpPower = -18;
+        let score = 0;
+        let gameRunning = false;
+        let platforms = [];
+        let keys = {};
+
+        // Plattformen generieren
+        function generatePlatforms() {
+            platforms = [];
+            for (let i = 0; i < 8; i++) {
+                platforms.push({
+                    x: i * 150 + Math.random() * 80,
+                    y: 200 + Math.random() * 250,
+                    width: 120,
+                    height: 20
+                });
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#0a0a14';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Plattformen
+            ctx.fillStyle = '#00ffcc';
+            platforms.forEach(p => {
+                ctx.fillRect(p.x, p.y, p.width, p.height);
+            });
+
+            // Player
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // Score
+            document.getElementById('scoreDisplay').textContent = Math.floor(score);
+        }
+
+        function update() {
+            if (!gameRunning) return;
+
+            // Bewegung
+            if (keys['ArrowLeft'] || keys['a']) player.x -= 6;
+            if (keys['ArrowRight'] || keys['d']) player.x += 6;
+
+            // Gravity
+            player.vy += gravity;
+            player.y += player.vy;
+
+            // Plattform Kollision
+            for (let p of platforms) {
+                if (player.x < p.x + p.width &&
+                    player.x + player.width > p.x &&
+                    player.y + player.height > p.y &&
+                    player.y + player.height - player.vy <= p.y) {
+                    
+                    if (player.vy > 0) {
+                        player.y = p.y - player.height;
+                        player.vy = 0;
+                        player.jumping = false;
+                    }
+                }
+            }
+
+            // Boden
+            if (player.y > canvas.height - player.height) {
+                player.y = canvas.height - player.height;
+                player.vy = 0;
+                player.jumping = false;
+            }
+
+            // Score (Fortschritt)
+            score += 0.3;
+
+            // Plattformen nach links bewegen (Endlosgefühl)
+            platforms.forEach(p => p.x -= 2.5);
+            if (platforms[0].x < -150) {
+                platforms.shift();
+                platforms.push({
+                    x: canvas.width + Math.random() * 100,
+                    y: 150 + Math.random() * 280,
+                    width: 120,
+                    height: 20
+                });
+            }
+
+            draw();
+        }
+
+        function jump() {
+            if (!player.jumping) {
+                player.vy = jumpPower;
+                player.jumping = true;
+            }
+        }
+
+        function startGame() {
+            score = 0;
+            player.x = 100;
+            player.y = 200;
+            player.vy = 0;
+            gameRunning = true;
+            generatePlatforms();
+            setInterval(update, 1000/60);
+        }
+
+        // Steuerung
+        window.addEventListener('keydown', e => {
+            keys[e.key] = true;
+            if ((e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') && gameRunning) {
+                e.preventDefault();
+                jump();
+            }
+        });
+
+        window.addEventListener('keyup', e => keys[e.key] = false);
+
+        // Game Over bei Absturz
+        setInterval(() => {
+            if (gameRunning && player.y > canvas.height + 50) {
+                gameRunning = false;
+                saveScore(Math.floor(score));
+            }
+        }, 100);
+
+        function saveScore(finalScore) {
+            let scores = JSON.parse(localStorage.getItem('aceportal_scores')) || [];
+            scores.push({
+                name: currentPlayer,
+                score: finalScore,
+                timestamp: Date.now()
+            });
+
+            const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+            scores = scores.filter(s => s.timestamp > sevenDaysAgo)
+                           .sort((a, b) => b.score - a.score)
+                           .slice(0, 50);
+
+            localStorage.setItem('aceportal_scores', JSON.stringify(scores));
+            alert(`🎮 Game Over!\n\nScore: ${finalScore}\nGespeichert in der Rangliste!`);
+        }
+    </script>
+</body>
+</html>
