@@ -32,24 +32,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .user-area {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .user-name {
-            font-weight: 500;
-            cursor: pointer;
-        }
-        .login-btn {
-            padding: 8px 18px;
-            background: #4285f4;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-        }
+        .user-name { font-weight: 500; cursor: pointer; }
         .container {
             padding-top: 100px;
             max-width: 1100px;
@@ -65,12 +48,6 @@
             border: 2px solid #00ffcc;
             border-radius: 20px;
             padding: 25px;
-            height: fit-content;
-        }
-        .leaderboard h2 {
-            color: #00ffcc;
-            margin-bottom: 20px;
-            text-align: center;
         }
         .rank-item {
             display: flex;
@@ -80,14 +57,7 @@
             padding: 12px 15px;
             border-radius: 10px;
         }
-        .rank-pos { font-weight: bold; width: 40px; color: #ffd700; }
-        .rank-name { flex: 1; }
-        .rank-time { font-family: monospace; color: #00ffcc; font-weight: bold; }
-        .top1 { background: linear-gradient(90deg, #ffd700, #ffaa00) !important; color: black; }
-        .my-score {
-            border: 2px solid #00ffcc;
-            background: rgba(0, 255, 100, 0.1) !important;
-        }
+        .my-score { border: 2px solid #00ffcc; background: rgba(0,255,100,0.1) !important; }
         .btn {
             display: inline-block;
             padding: 18px 60px;
@@ -99,21 +69,13 @@
             border-radius: 12px;
             cursor: pointer;
             margin: 20px 0;
-            transition: all 0.3s;
-        }
-        .btn:hover {
-            transform: scale(1.08);
-            box-shadow: 0 15px 30px rgba(0, 255, 204, 0.5);
         }
     </style>
 </head>
 <body>
     <header>
         <div class="logo">ACEPORTAL</div>
-        <div class="user-area">
-            <span id="user-name" class="user-name" onclick="showProfile()">Gast</span>
-            <button class="login-btn" onclick="showLoginModal()">Anmelden</button>
-        </div>
+        <span id="user-name" class="user-name" onclick="showProfile()">Gast</span>
     </header>
 
     <div class="container">
@@ -124,19 +86,25 @@
         </div>
 
         <div class="leaderboard">
-            <h2>🏆 WELT-RANGLISTE</h2>
+            <h2 style="color:#00ffcc; text-align:center; margin-bottom:20px;">🏆 Rangliste</h2>
             <div id="leaderboard"></div>
         </div>
     </div>
 
     <!-- Login Modal -->
     <div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:200; align-items:center; justify-content:center;">
-        <div style="background:#1a1a2e; padding:40px; border-radius:20px; width:400px;">
-            <h2 style="margin-bottom:20px;">Anmelden / Gast</h2>
-            <input type="text" id="nickname" placeholder="Dein Name / Nickname" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
-            <button onclick="loginUser()" style="width:100%; padding:14px; background:#00ff88; color:black; border:none; border-radius:8px; margin:15px 0;">Bestätigen</button>
-            <button onclick="guestLogin()" style="width:100%; padding:14px; background:#666; color:white; border:none; border-radius:8px;">Als Gast spielen</button>
-            <button onclick="closeModal()" style="margin-top:10px; color:#aaa;">Schließen</button>
+        <div style="background:#1a1a2e; padding:40px; border-radius:20px; width:420px;">
+            <h2>Anmelden / Registrieren</h2>
+            
+            <input type="email" id="email" placeholder="E-Mail-Adresse" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
+            <input type="password" id="password" placeholder="Passwort" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
+            <input type="text" id="nickname" placeholder="Nickname (optional)" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
+            
+            <button onclick="signUp()" style="width:100%; padding:14px; background:#00ff88; color:black; border:none; border-radius:8px; margin:15px 0;">Registrieren</button>
+            <button onclick="signIn()" style="width:100%; padding:14px; background:#555; color:white; border:none; border-radius:8px;">Anmelden</button>
+            <button onclick="guestLogin()" style="width:100%; padding:14px; background:#666; color:white; border:none; border-radius:8px; margin-top:10px;">Als Gast spielen</button>
+            
+            <button onclick="closeModal()" style="margin-top:15px; color:#aaa;">Schließen</button>
         </div>
     </div>
 
@@ -152,67 +120,64 @@
             document.getElementById('loginModal').style.display = 'none';
         }
 
-        function loginUser() {
-            const name = document.getElementById('nickname').value.trim() || "Spieler";
-            currentUser = { name: name, isGuest: false };
-            document.getElementById('user-name').textContent = name;
+        function signUp() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            const nick = document.getElementById('nickname').value.trim() || email.split('@')[0];
+
+            alert("Registrierung mit E-Mail ist derzeit simuliert.\n\nAngemeldet als: " + nick);
+            currentUser = { name: nick, email: email };
+            document.getElementById('user-name').textContent = nick;
+            closeModal();
+            updateLeaderboard();
+        }
+
+        function signIn() {
+            const email = document.getElementById('email').value;
+            const nick = document.getElementById('nickname').value.trim() || email.split('@')[0];
+
+            alert("Anmeldung simuliert.\n\nAngemeldet als: " + nick);
+            currentUser = { name: nick, email: email };
+            document.getElementById('user-name').textContent = nick;
             closeModal();
             updateLeaderboard();
         }
 
         function guestLogin() {
-            const name = document.getElementById('nickname').value.trim() || "Spieler";
-            currentUser = { name: name, isGuest: true };
-            document.getElementById('user-name').textContent = name + " (Guest)";
+            const nick = document.getElementById('nickname').value.trim() || "Spieler";
+            currentUser = { name: nick, isGuest: true };
+            document.getElementById('user-name').textContent = nick + " (Guest)";
             closeModal();
             updateLeaderboard();
         }
 
         function showProfile() {
             if (currentUser) {
-                alert(`Angemeldet als: ${currentUser.name} ${currentUser.isGuest ? '(Guest)' : ''}`);
+                alert(`Angemeldet als: ${currentUser.name}`);
+            } else {
+                showLoginModal();
             }
         }
 
-        // Leaderboard mit eigener Zeit
         function updateLeaderboard() {
             const container = document.getElementById('leaderboard');
             container.innerHTML = '';
 
-            // Fake globale Rangliste
-            const globalScores = [
-                { name: "ProGamer42", time: 18.45, country: "🇩🇪" },
-                { name: "ShadowDash", time: 19.87, country: "🇰🇷" },
-                { name: "LavaRunner", time: 21.23, country: "🇧🇷" },
-            ];
-
-            globalScores.forEach((entry, index) => {
-                const div = document.createElement('div');
-                div.className = `rank-item ${index === 0 ? 'top1' : ''}`;
-                div.innerHTML = `
-                    <div class="rank-pos">#${index+1}</div>
-                    <div class="rank-name">${entry.country} ${entry.name}</div>
-                    <div class="rank-time">${entry.time.toFixed(2)}s</div>
-                `;
-                container.appendChild(div);
-            });
-
-            // Eigene beste Zeit anzeigen
             if (myBestTime) {
-                const myDiv = document.createElement('div');
-                myDiv.className = 'rank-item my-score';
-                myDiv.innerHTML = `
+                const div = document.createElement('div');
+                div.className = 'rank-item my-score';
+                div.innerHTML = `
                     <div class="rank-pos">★</div>
                     <div class="rank-name">${currentUser ? currentUser.name : 'Du'} ${currentUser && currentUser.isGuest ? '(Guest)' : ''}</div>
                     <div class="rank-time">${myBestTime.toFixed(2)}s</div>
                 `;
-                container.appendChild(myDiv);
+                container.appendChild(div);
+            } else {
+                container.innerHTML = `<p style="text-align:center; color:#666; padding:40px 20px;">Spiele zuerst, um deine Zeit hier zu sehen!</p>`;
             }
         }
 
-        window.onload = () => {
-            updateLeaderboard();
-        };
+        window.onload = updateLeaderboard;
     </script>
 </body>
 </html>
