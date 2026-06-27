@@ -113,14 +113,14 @@
     </div>
 
     <div class="main">
-        <h1>SCOREBOARD — TOP 25 (LETZTE 7 TAGE)</h1>
+        <h1>TOP 25 ZEITEN (LETZTE 7 TAGE)</h1>
         <div class="scoreboard">
             <table>
                 <thead>
                     <tr>
                         <th class="rank">RANG</th>
                         <th>SPIELER</th>
-                        <th>SCORE</th>
+                        <th>ZEIT</th>
                         <th>DATUM</th>
                     </tr>
                 </thead>
@@ -133,7 +133,7 @@
         </div>
 
         <div style="text-align:center; margin-top: 20px;">
-            <button class="test-btn" onclick="addTestScore()">Test-Score hinzufügen</button>
+            <button class="test-btn" onclick="addTestScore()">Test-Eintrag hinzufügen</button>
             <button class="back-btn" onclick="window.location.href='index.html'">← ZURÜCK ZUM MENÜ</button>
         </div>
     </div>
@@ -158,10 +158,9 @@
             let scores = JSON.parse(localStorage.getItem('aceportal_scores')) || [];
             const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
-            // Filter + Sortierung
             scores = scores
                 .filter(s => s.timestamp > sevenDaysAgo)
-                .sort((a, b) => b.score - a.score)
+                .sort((a, b) => b.score - a.score)   // Höchste Zahl zuerst (beste Zeit)
                 .slice(0, 25);
 
             const tbody = document.getElementById('scoreBody');
@@ -189,17 +188,16 @@
             });
         }
 
-        // Test-Score hinzufügen (zum Testen)
         function addTestScore() {
             let scores = JSON.parse(localStorage.getItem('aceportal_scores')) || [];
             scores.push({
                 name: currentPlayer,
-                score: Math.floor(Math.random() * 800) + 200,
+                score: Math.floor(Math.random() * 800) + 300,
                 timestamp: Date.now()
             });
             localStorage.setItem('aceportal_scores', JSON.stringify(scores));
             loadScoreboard();
-            alert("Test-Score hinzugefügt!");
+            alert("Test-Eintrag hinzugefügt!");
         }
 
         window.onload = () => {
