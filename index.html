@@ -4,193 +4,121 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AcePortal</title>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        
         body {
             background: radial-gradient(circle at center, #1a0033, #0a001a);
             min-height: 100vh;
             font-family: 'Inter', sans-serif;
             color: white;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Animated Background */
-        .bg {
-            position: absolute;
-            inset: 0;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(0, 255, 200, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(255, 0, 170, 0.15) 0%, transparent 50%);
-            animation: float 25s infinite linear;
-            z-index: 1;
-        }
-
-        @keyframes float {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            100% { transform: translate(30px, 30px) rotate(5deg); }
-        }
-
-        .glass {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 20px 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 100;
-        }
-
-        .logo {
-            font-size: 2.2rem;
-            font-weight: 700;
-            letter-spacing: -2px;
-            background: linear-gradient(90deg, #00ffcc, #ff00cc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .container {
-            position: relative;
-            z-index: 10;
-            min-height: 100vh;
+            margin: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0 20px;
         }
-
-        .card {
-            width: 100%;
-            max-width: 520px;
-            padding: 60px 50px;
-            border-radius: 28px;
-            text-align: center;
-            glass: true;
-        }
-
-        h1 {
-            font-size: 3.8rem;
-            margin-bottom: 12px;
-            background: linear-gradient(90deg, #ffffff, #a0f0ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .subtitle {
-            font-size: 1.35rem;
-            color: #c0c0ff;
-            margin-bottom: 50px;
-            opacity: 0.9;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 18px 70px;
-            font-size: 1.45rem;
-            font-weight: 600;
-            background: linear-gradient(45deg, #00ffcc, #00aaff);
-            color: #000;
-            border: none;
-            border-radius: 9999px;
-            cursor: pointer;
-            margin: 15px 8px;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 10px 30px rgba(0, 255, 204, 0.3);
-        }
-
-        .btn:hover {
-            transform: translateY(-6px) scale(1.05);
-            box-shadow: 0 20px 40px rgba(0, 255, 204, 0.5);
-        }
-
-        .leaderboard {
-            margin-top: 60px;
-            background: rgba(255,255,255,0.06);
-            border-radius: 20px;
-            padding: 25px;
-            backdrop-filter: blur(15px);
-        }
-
-        .rank-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 14px 18px;
-            margin: 8px 0;
+        .glass {
             background: rgba(255,255,255,0.08);
-            border-radius: 12px;
-            align-items: center;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 28px;
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 460px;
+            text-align: center;
         }
-
-        .top1 { background: rgba(255, 215, 0, 0.25) !important; }
+        .logo { font-size: 3.6rem; font-weight: 800; background: linear-gradient(#00ffcc, #ff00cc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        input, button {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            border-radius: 12px;
+            border: none;
+        }
+        input { background: rgba(255,255,255,0.1); color: white; }
+        .btn-google { background: white; color: black; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-primary { background: #00ff88; color: black; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="bg"></div>
-
-    <header>
+    <div class="glass">
         <div class="logo">ACEPORTAL</div>
-        <button onclick="fakeGoogleLogin()" 
-                style="padding:10px 22px; background:rgba(255,255,255,0.15); border:none; border-radius:50px; color:white; cursor:pointer;">
+        <p style="margin: 20px 0 30px;">Speedrun Parkour</p>
+
+        <div id="user-info" style="margin:15px 0; font-weight:500;"></div>
+
+        <!-- Google -->
+        <button onclick="signInWithGoogle()" class="btn-google">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="22"> 
             Mit Google anmelden
         </button>
-    </header>
 
-    <div class="container">
-        <div class="card glass">
-            <h1>SPEEDRUN PARKOUR</h1>
-            <p class="subtitle">Überlebe die Lava. Schlage die Rekorde.</p>
-            
-            <a href="game.html" class="btn">JETZT SPIELEN</a>
+        <div style="margin:25px 0; color:#666;">— oder —</div>
 
-            <!-- Leaderboard -->
-            <div class="leaderboard">
-                <h2 style="margin-bottom:20px; color:#a0f0ff;">🏆 Weltrangliste</h2>
-                <div id="leaderboard"></div>
-            </div>
-        </div>
+        <!-- E-Mail Registrierung / Login -->
+        <input type="email" id="email" placeholder="E-Mail-Adresse" />
+        <input type="password" id="password" placeholder="Passwort" />
+
+        <button onclick="signUpWithEmail()" class="btn-primary">Registrieren</button>
+        <button onclick="signInWithEmail()" class="btn-primary" style="background:#555;">Anmelden</button>
+
+        <button onclick="signOut()" id="logout-btn" style="display:none; background:#ff4444; margin-top:20px;">
+            Abmelden
+        </button>
     </div>
 
     <script>
-        function fakeGoogleLogin() {
-            alert("✅ Mit Google angemeldet!\n\nDeine Highscores werden jetzt gespeichert.");
+        const firebaseConfig = {
+            // ← DEINE FIREBASE CONFIG HIER EINFÜGEN
+            apiKey: "DEIN_API_KEY",
+            authDomain: "dein-projekt.firebaseapp.com",
+            projectId: "dein-projekt",
+            storageBucket: "dein-projekt.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:xxxxxxxxxxxxxxxxxx"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        function signInWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).then(r => updateUI(r.user));
         }
 
-        const fakeScores = [
-            {pos: 1, name: "NeonDash", time: "17.84"},
-            {pos: 2, name: "VoidRunner", time: "19.12"},
-            {pos: 3, name: "LavaKing", time: "20.45"},
-            {pos: 4, name: "PixelFox", time: "21.67"}
-        ];
+        function signUpWithEmail() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            if (!email || !pass) return alert("Bitte E-Mail und Passwort ausfüllen");
 
-        function renderLeaderboard() {
-            const lb = document.getElementById('leaderboard');
-            lb.innerHTML = fakeScores.map(s => `
-                <div class="rank-item ${s.pos === 1 ? 'top1' : ''}">
-                    <span><strong>#${s.pos}</strong> ${s.name}</span>
-                    <span style="color:#00ffcc; font-family:monospace;">${s.time}s</span>
-                </div>
-            `).join('');
+            auth.createUserWithEmailAndPassword(email, pass)
+                .then(r => updateUI(r.user))
+                .catch(err => alert("Fehler: " + err.message));
         }
 
-        window.onload = renderLeaderboard;
+        function signInWithEmail() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            auth.signInWithEmailAndPassword(email, pass)
+                .then(r => updateUI(r.user))
+                .catch(err => alert("Fehler: " + err.message));
+        }
+
+        function updateUI(user) {
+            document.getElementById('user-info').innerHTML = `Angemeldet als <strong>${user.email}</strong>`;
+            document.getElementById('logout-btn').style.display = 'block';
+        }
+
+        function signOut() {
+            auth.signOut().then(() => location.reload());
+        }
+
+        // Auto-Check
+        auth.onAuthStateChanged(user => {
+            if (user) updateUI(user);
+        });
     </script>
 </body>
 </html>
