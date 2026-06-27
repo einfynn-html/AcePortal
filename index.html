@@ -7,127 +7,212 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Press+Start+2P&display=swap');
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #0a0a0f;
             color: #e0e0ff;
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        .container {
-            text-align: center;
-            max-width: 900px;
-            padding: 40px 20px;
+        header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: rgba(10,10,20,0.95);
+            border-bottom: 1px solid #00ffcc;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
         }
 
         .logo {
             font-family: 'Press Start 2P', cursive;
-            font-size: 4.5rem;
+            font-size: 1.8rem;
             background: linear-gradient(90deg, #00ffcc, #ff00aa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-            text-shadow: 0 0 40px rgba(0, 255, 204, 0.5);
         }
 
-        .tagline {
-            font-size: 1.4rem;
-            color: #a0a0ff;
-            margin-bottom: 60px;
-            letter-spacing: 2px;
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        .game-card {
-            background: rgba(20, 20, 40, 0.95);
+        .login-btn {
+            padding: 10px 20px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .container {
+            padding-top: 100px;
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            gap: 40px;
+            padding: 120px 40px 40px;
+        }
+
+        .game-section {
+            flex: 1;
+        }
+
+        .leaderboard {
+            width: 380px;
+            background: rgba(20,20,40,0.95);
             border: 2px solid #00ffcc;
             border-radius: 20px;
-            padding: 40px 30px;
-            margin: 0 auto;
-            max-width: 520px;
-            box-shadow: 0 0 60px rgba(0, 255, 204, 0.3);
-            transition: transform 0.3s;
+            padding: 25px;
+            height: fit-content;
         }
 
-        .game-card:hover {
-            transform: translateY(-10px);
+        .leaderboard h2 {
+            color: #00ffcc;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
-        .game-title {
-            font-size: 2.2rem;
-            margin-bottom: 15px;
+        .rank-item {
+            display: flex;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            margin: 8px 0;
+            padding: 12px 15px;
+            border-radius: 10px;
+        }
+
+        .rank-pos {
+            font-weight: bold;
+            width: 40px;
+            color: #ffd700;
+        }
+
+        .rank-name {
+            flex: 1;
+        }
+
+        .rank-time {
+            font-family: monospace;
             color: #00ffcc;
         }
 
-        .description {
-            color: #b0b0ff;
-            margin-bottom: 40px;
-            line-height: 1.6;
-        }
+        .top1 { background: linear-gradient(90deg, #ffd700, #ffaa00) !important; color: black; }
 
         .btn {
             display: inline-block;
             padding: 18px 60px;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 700;
             background: linear-gradient(45deg, #00ffcc, #00ccaa);
             color: #000;
             border: none;
             border-radius: 12px;
             cursor: pointer;
+            margin: 20px 0;
             transition: all 0.3s;
-            text-decoration: none;
-            margin: 10px;
         }
 
         .btn:hover {
             transform: scale(1.08);
-            box-shadow: 0 15px 30px rgba(0, 255, 204, 0.4);
-        }
-
-        .footer {
-            margin-top: 80px;
-            font-size: 0.95rem;
-            color: #666;
-        }
-
-        .glow {
-            animation: glow 2s infinite alternate;
-        }
-
-        @keyframes glow {
-            from { text-shadow: 0 0 20px #00ffcc; }
-            to { text-shadow: 0 0 40px #00ffcc, 0 0 60px #ff00aa; }
+            box-shadow: 0 15px 30px rgba(0, 255, 204, 0.5);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo glow">ACEPORTAL</div>
-        <p class="tagline">FAST • COMPETITIVE • ADDICTIVE</p>
+    <header>
+        <div class="logo">ACEPORTAL</div>
+        <div class="user-area">
+            <span id="user-name">Gast</span>
+            <button class="login-btn" onclick="fakeGoogleLogin()">Mit Google anmelden</button>
+        </div>
+    </header>
 
-        <div class="game-card">
-            <div class="game-title">SPEEDRUN PARKOUR</div>
-            <p class="description">
-                Teste deine Reflexe und Geschwindigkeit.<br>
-                Springe über Plattformen, vermeide die tödliche Lava und stelle einen neuen Rekord auf!
-            </p>
+    <div class="container">
+        <!-- Game Section -->
+        <div class="game-section">
+            <h1 style="font-size:4rem; margin-bottom:10px;">SPEEDRUN PARKOUR</h1>
+            <p style="font-size:1.4rem; color:#a0a0ff; margin-bottom:40px;">Wie schnell kannst du die Lava überleben?</p>
             
             <a href="game.html" class="btn">JETZT SPIELEN →</a>
+            
+            <p style="margin-top:30px; color:#777; font-size:0.95rem;">
+                Tipp: Doppel-Sprung + präzises Timing sind der Schlüssel
+            </p>
         </div>
 
-        <div class="footer">
-            Bestenliste kommt bald • Rekorde werden lokal gespeichert
+        <!-- Leaderboard -->
+        <div class="leaderboard">
+            <h2>🏆 WELT-RANGLISTE</h2>
+            <div id="leaderboard"></div>
         </div>
     </div>
+
+    <script>
+        // Fake User
+        let currentUser = null;
+
+        function fakeGoogleLogin() {
+            currentUser = {
+                name: "Du (Google)",
+                email: "deinname@gmail.com"
+            };
+            document.getElementById('user-name').textContent = "Du";
+            alert("✅ Erfolgreich mit Google angemeldet!\n( Simulation - Highscores werden lokal gespeichert )");
+            updateLeaderboard();
+        }
+
+        // Fake + lokale Highscores
+        let scores = [
+            { name: "ProGamer42", time: 18.45, country: "🇩🇪" },
+            { name: "ShadowDash", time: 19.87, country: "🇰🇷" },
+            { name: "LavaRunner", time: 21.23, country: "🇧🇷" },
+            { name: "PixelKnight", time: 22.10, country: "🇯🇵" },
+        ];
+
+        function updateLeaderboard() {
+            const container = document.getElementById('leaderboard');
+            container.innerHTML = '';
+
+            scores.forEach((entry, index) => {
+                const div = document.createElement('div');
+                div.className = `rank-item ${index === 0 ? 'top1' : ''}`;
+                div.innerHTML = `
+                    <div class="rank-pos">#${index+1}</div>
+                    <div class="rank-name">${entry.country} ${entry.name}</div>
+                    <div class="rank-time">${entry.time.toFixed(2)}s</div>
+                `;
+                container.appendChild(div);
+            });
+
+            // Eigener Score (falls vorhanden)
+            try {
+                const best = localStorage.getItem('speedrunBest');
+                if (best && currentUser) {
+                    const myDiv = document.createElement('div');
+                    myDiv.style.marginTop = '20px';
+                    myDiv.style.padding = '15px';
+                    myDiv.style.border = '2px solid #00ffcc';
+                    myDiv.style.borderRadius = '12px';
+                    myDiv.innerHTML = `
+                        <strong>Dein bester Lauf:</strong> ${parseFloat(best).toFixed(2)} Sekunden
+                    `;
+                    container.appendChild(myDiv);
+                }
+            } catch(e) {}
+        }
+
+        // Init
+        window.onload = () => {
+            updateLeaderboard();
+        };
+    </script>
 </body>
 </html>
