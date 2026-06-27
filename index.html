@@ -80,14 +80,13 @@
     </div>
 
     <script>
-        // === DEINE FIREBASE CONFIG HIER EINFÜGEN ===
         const firebaseConfig = {
-            apiKey: "DEIN_API_KEY",
-            authDomain: "dein-projekt.firebaseapp.com",
-            projectId: "dein-projekt",
-            storageBucket: "dein-projekt.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:xxxxxxxxxxxxxxxx"
+            apiKey: "AIzaSyA8UYsuQGkoPO6jqMgXtL0zX-iNmvA5pA0",
+            authDomain: "aceportal-xyz.firebaseapp.com",   // ← ÄNDERE DAS
+            projectId: "aceportal-xyz",                    // ← ÄNDERE DAS
+            storageBucket: "aceportal-xyz.appspot.com",    // ← ÄNDERE DAS
+            messagingSenderId: "123456789012",             // ← ÄNDERE DAS
+            appId: "1:123456789012:web:xxxxxxxxxxxxxxxx"   // ← ÄNDERE DAS
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -96,48 +95,30 @@
         function signUpWithEmail() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-
-            if (!email || !password) {
-                alert("Bitte E-Mail und Passwort eingeben!");
-                return;
-            }
+            if (!email || !password) return alert("Bitte E-Mail und Passwort ausfüllen");
 
             auth.createUserWithEmailAndPassword(email, password)
-                .then((result) => {
-                    updateUI(result.user);
-                })
-                .catch((error) => {
-                    alert("Registrierung fehlgeschlagen: " + error.message);
-                });
+                .then((result) => updateUI(result.user))
+                .catch((error) => alert("Fehler: " + error.message));
         }
 
         function signInWithEmail() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-
             auth.signInWithEmailAndPassword(email, password)
-                .then((result) => {
-                    updateUI(result.user);
-                })
-                .catch((error) => {
-                    alert("Anmeldung fehlgeschlagen: " + error.message);
-                });
+                .then((result) => updateUI(result.user))
+                .catch((error) => alert("Fehler: " + error.message));
         }
 
         function updateUI(user) {
-            document.getElementById('user-info').innerHTML = 
-                `Angemeldet als <strong>${user.email}</strong>`;
+            document.getElementById('user-info').innerHTML = `Angemeldet als <strong>${user.email}</strong>`;
             document.getElementById('logout-btn').style.display = 'block';
         }
 
         function signOut() {
-            auth.signOut().then(() => {
-                document.getElementById('user-info').innerHTML = '';
-                document.getElementById('logout-btn').style.display = 'none';
-            });
+            auth.signOut().then(() => location.reload());
         }
 
-        // Automatisch prüfen, ob schon eingeloggt
         auth.onAuthStateChanged(user => {
             if (user) updateUI(user);
         });
