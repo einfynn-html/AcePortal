@@ -35,13 +35,15 @@
         let hazards = [{x:0, y:480, w:2500, h:40}];
         let keys = {};
 
-        function saveScore(name, time) {
+              function saveScore(name, time) {
             let scores = JSON.parse(localStorage.getItem('aceportal_scores') || '[]');
-            scores.push({name: name, time: parseFloat(time)});
-            scores.sort((a,b) => a.time - b.time);
-            localStorage.setItem('aceportal_scores', JSON.stringify(scores.slice(0,30)));
+            scores.push({ 
+                name: name, 
+                time: parseFloat(time), 
+                date: new Date().toISOString() 
+            });
+            localStorage.setItem('aceportal_scores', JSON.stringify(scores));
         }
-
         function draw() {
             ctx.clearRect(0,0,canvas.width,canvas.height);
             ctx.fillStyle = '#111133'; ctx.fillRect(0,0,canvas.width,canvas.height);
