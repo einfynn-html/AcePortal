@@ -6,53 +6,23 @@
     <title>AcePortal - Speedrun Parkour</title>
     <style>
         body { 
-            margin:0; 
-            padding:0; 
-            display:flex; 
-            justify-content:center; 
-            align-items:center; 
-            height:100vh; 
-            background:#222; 
-            font-family:Arial, sans-serif; 
-            color:white; 
-            overflow:hidden; 
+            margin:0; padding:0; display:flex; justify-content:center; align-items:center; 
+            height:100vh; background:#222; font-family:Arial, sans-serif; color:white; overflow:hidden; 
         }
         canvas { 
-            border:4px solid #fff; 
-            image-rendering:pixelated; 
-            box-shadow:0 0 20px rgba(0,255,100,0.5); 
+            border:4px solid #fff; image-rendering:pixelated; box-shadow:0 0 20px rgba(0,255,100,0.5); 
         }
         #ui { 
-            position:absolute; 
-            top:20px; 
-            left:20px; 
-            z-index:10; 
-            background:rgba(0,0,0,0.8); 
-            padding:12px 18px; 
-            border-radius:10px; 
-            font-size:18px; 
-            min-width: 220px;
+            position:absolute; top:20px; left:20px; z-index:10; background:rgba(0,0,0,0.85); 
+            padding:12px 18px; border-radius:10px; font-size:18px; min-width: 240px;
         }
         #instructions { 
-            position:absolute; 
-            bottom:20px; 
-            left:50%; 
-            transform:translateX(-50%); 
-            background:rgba(0,0,0,0.8); 
-            padding:12px 25px; 
-            border-radius:10px; 
-            text-align:center; 
-            font-size:16px;
+            position:absolute; bottom:20px; left:50%; transform:translateX(-50%); 
+            background:rgba(0,0,0,0.8); padding:12px 25px; border-radius:10px; text-align:center; 
         }
         button { 
-            margin-top:8px; 
-            padding:8px 16px; 
-            background:#0f0; 
-            color:black; 
-            border:none; 
-            border-radius:6px; 
-            cursor:pointer; 
-            font-weight:bold; 
+            margin-top:8px; padding:9px 16px; background:#0f0; color:black; border:none; 
+            border-radius:6px; cursor:pointer; font-weight:bold; 
         }
     </style>
 </head>
@@ -61,7 +31,7 @@
         <div>Spieler: <strong id="playerDisplay">---</strong></div>
         <div>Zeit: <span id="timer">0.000</span>s</div>
         <div>Bester Run: <span id="bestTime">-</span>s</div>
-        <div id="status">Bereit</div>
+        <div id="status">Bereit - Drücke START</div>
         <button onclick="startGame()">START / RESTART</button>
         <button onclick="window.location.href='index.html'" style="background:#ff8800; margin-left:8px;">← Menü</button>
     </div>
@@ -102,10 +72,13 @@
             } catch(e) {}
         }
 
-        // Leaderboard Funktion
         function saveScore(name, time) {
             let scores = JSON.parse(localStorage.getItem('aceportal_scores') || '[]');
-            scores.push({ name: name, time: parseFloat(time), date: new Date().toISOString() });
+            scores.push({ 
+                name: name, 
+                time: parseFloat(time.toFixed(3)), 
+                date: new Date().toISOString() 
+            });
             scores.sort((a, b) => a.time - b.time);
             localStorage.setItem('aceportal_scores', JSON.stringify(scores.slice(0, 50)));
         }
@@ -124,8 +97,7 @@
         let keys = {};
 
         function drawBackground() {
-            ctx.fillStyle = '#111133'; 
-            ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = '#111133'; ctx.fillRect(0,0,canvas.width,canvas.height);
             ctx.fillStyle = '#fff';
             for(let i=0;i<50;i++) {
                 let sx = (i*73%900) - cameraX*0.2;
@@ -225,11 +197,7 @@
         }
 
         function resetPlayer() {
-            player.x = 80; 
-            player.y = 380; 
-            player.vx = 0; 
-            player.vy = 0; 
-            cameraX = 0;
+            player.x = 80; player.y = 380; player.vx = 0; player.vy = 0; cameraX = 0;
         }
 
         function endRun(success) {
@@ -243,10 +211,10 @@
                 if (finalTime < bestTime) {
                     bestTime = finalTime;
                     saveBestTime(bestTime);
-                    msg += ' 🏆 NEUER PERSÖNLICHER REKORD!';
+                    msg += ' 🏆 NEUER REKORD!';
                 }
                 
-                // Score in globale Rangliste speichern
+                // WICHTIG: Score speichern
                 if (currentPlayer && currentPlayer !== "Unbekannt") {
                     saveScore(currentPlayer, finalTime);
                 }
@@ -272,9 +240,7 @@
             }
         });
 
-        window.addEventListener('keyup', e => {
-            keys[e.key] = false;
-        });
+        window.addEventListener('keyup', e => keys[e.key] = false);
 
         // Init
         window.onload = () => {
