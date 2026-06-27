@@ -5,149 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AcePortal - Speedrun Parkour</title>
     <style>
-        body { 
-            margin:0; padding:0; display:flex; justify-content:center; align-items:center; 
-            height:100vh; background:#222; font-family:Arial, sans-serif; color:white; overflow:hidden; 
-        }
-        canvas { 
-            border:4px solid #fff; image-rendering:pixelated; box-shadow:0 0 20px rgba(0,255,100,0.5); 
-        }
-        #ui { 
-            position:absolute; top:20px; left:20px; z-index:10; background:rgba(0,0,0,0.85); 
-            padding:12px 18px; border-radius:10px; font-size:18px; min-width: 240px;
-        }
-        #instructions { 
-            position:absolute; bottom:20px; left:50%; transform:translateX(-50%); 
-            background:rgba(0,0,0,0.8); padding:12px 25px; border-radius:10px; text-align:center; 
-        }
-        button { 
-            margin-top:8px; padding:9px 16px; background:#0f0; color:black; border:none; 
-            border-radius:6px; cursor:pointer; font-weight:bold; 
-        }
+        body { margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh; background:#111; color:white; overflow:hidden; }
+        canvas { border:4px solid #0f0; image-rendering:pixelated; box-shadow:0 0 30px #0f0; }
+        #ui { position:absolute; top:15px; left:15px; z-index:10; background:rgba(0,0,0,0.9); padding:12px 20px; border-radius:10px; font-size:17px; }
+        button { padding:8px 16px; margin:5px 3px; background:#0f0; color:black; border:none; border-radius:5px; cursor:pointer; font-weight:bold; }
     </style>
 </head>
 <body>
     <div id="ui">
-        <div>Spieler: <strong id="playerDisplay">---</strong></div>
-        <div>Zeit: <span id="timer">0.000</span>s</div>
-        <div>Bester Run: <span id="bestTime">-</span>s</div>
-        <div id="status">Bereit - Drücke START</div>
-        <button onclick="startGame()">START / RESTART</button>
-        <button onclick="window.location.href='index.html'" style="background:#ff8800; margin-left:8px;">← Menü</button>
+        <div>Spieler: <strong id="playerNameDisplay">---</strong></div>
+        <div>Zeit: <span id="timer">0.000</span> s</div>
+        <div id="status">Bereit</div>
+        <button onclick="startGame()">RESTART</button>
+        <button onclick="window.location.href='index.html'">← Menü</button>
     </div>
 
     <canvas id="gameCanvas" width="800" height="500"></canvas>
 
-    <div id="instructions">
-        ← → oder A D : Bewegen<br>
-        LEERTASTE : Springen (Doppel-Sprung möglich)<br>
-        <strong style="color:#ff4444">Roter Boden = Tod!</strong>
-    </div>
-
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        
-        let player = { x:80, y:380, width:30, height:40, vx:0, vy:0, speed:5.8, jump:-15.8, gravity:0.72, grounded:false, doubleJump:true };
-        let cameraX = 0;
-        let gameTime = 0;
-        let timerInterval = null;
-        let isRunning = false;
-        let bestTime = Infinity;
+
+        let player = {x:80, y:380, width:30, height:40, vx:0, vy:0, speed:5.8, jump:-15.8, gravity:0.72, grounded:false, doubleJump:true};
+        let cameraX = 0, gameTime = 0, timerInterval, isRunning = false;
         let currentPlayer = "Unbekannt";
 
-        function loadBestTime() {
-            try {
-                const saved = localStorage.getItem('speedrunBest');
-                if (saved) bestTime = parseFloat(saved);
-            } catch(e) {}
-        }
-
-        function saveBestTime(time) {
-            try {
-                if (time < bestTime) {
-                    bestTime = time;
-                    localStorage.setItem('speedrunBest', time);
-                }
-            } catch(e) {}
-        }
-
-        function saveScore(name, time) {
-            let scores = JSON.parse(localStorage.getItem('aceportal_scores') || '[]');
-            scores.push({ 
-                name: name, 
-                time: parseFloat(time.toFixed(3)), 
-                date: new Date().toISOString() 
-            });
-            scores.sort((a, b) => a.time - b.time);
-            localStorage.setItem('aceportal_scores', JSON.stringify(scores.slice(0, 50)));
-        }
-
-        loadBestTime();
-
-        let platforms = [
-            {x:0, y:420, w:220, h:80}, {x:280, y:340, w:110, h:20}, {x:460, y:260, w:130, h:20},
-            {x:650, y:370, w:90, h:20}, {x:820, y:220, w:140, h:20}, {x:1030, y:310, w:100, h:20},
-            {x:1220, y:180, w:110, h:20}, {x:1400, y:340, w:95, h:20}, {x:1580, y:250, w:120, h:20},
-            {x:1780, y:380, w:220, h:80}
-        ];
-        
+        let platforms = [{x:0,y:420,w:220,h:80},{x:280,y:340,w:110,h:20},{x:460,y:260,w:130,h:20},{x:650,y:370,w:90,h:20},{x:820,y:220,w:140,h:20},{x:1030,y:310,w:100,h:20},{x:1220,y:180,w:110,h:20},{x:1400,y:340,w:95,h:20},{x:1580,y:250,w:120,h:20},{x:1780,y:380,w:220,h:80}];
         let goal = {x:1920, y:280, w:40, h:100};
         let hazards = [{x:0, y:480, w:2500, h:40}];
         let keys = {};
 
-        function drawBackground() {
-            ctx.fillStyle = '#111133'; ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = '#fff';
-            for(let i=0;i<50;i++) {
-                let sx = (i*73%900) - cameraX*0.2;
-                ctx.fillRect(sx%canvas.width, 50+(i%8)*40, 2,2);
-            }
+        function saveScore(name, time) {
+            let scores = JSON.parse(localStorage.getItem('aceportal_scores') || '[]');
+            scores.push({name: name, time: parseFloat(time)});
+            scores.sort((a,b) => a.time - b.time);
+            localStorage.setItem('aceportal_scores', JSON.stringify(scores.slice(0,30)));
         }
 
         function draw() {
             ctx.clearRect(0,0,canvas.width,canvas.height);
-            drawBackground();
-            
+            ctx.fillStyle = '#111133'; ctx.fillRect(0,0,canvas.width,canvas.height);
+
             ctx.fillStyle = '#0a0';
-            for(let p of platforms) ctx.fillRect(p.x-cameraX, p.y, p.w, p.h);
-            
+            for (let p of platforms) ctx.fillRect(p.x - cameraX, p.y, p.w, p.h);
+
             ctx.fillStyle = '#c00';
-            for(let h of hazards) {
-                ctx.fillRect(h.x-cameraX, h.y, h.w, h.h);
-                ctx.fillStyle = '#ff0';
-                ctx.fillRect(h.x-cameraX + 20, h.y + 8, h.w - 40, 8);
-                ctx.fillStyle = '#c00';
-            }
-            
+            for (let h of hazards) ctx.fillRect(h.x - cameraX, h.y, h.w, h.h);
+
             ctx.fillStyle = '#0f0';
-            ctx.fillRect(goal.x-cameraX, goal.y, goal.w, goal.h);
-            ctx.fillStyle = '#ff0';
-            ctx.fillRect(goal.x-cameraX+10, goal.y+10,20,20);
-            
+            ctx.fillRect(goal.x - cameraX, goal.y, goal.w, goal.h);
+
             ctx.fillStyle = '#0ff';
-            ctx.fillRect(player.x-cameraX, player.y, player.width, player.height);
-            ctx.fillStyle = '#000';
-            ctx.fillRect(player.x-cameraX+8, player.y+10,6,8);
-            ctx.fillRect(player.x-cameraX+20, player.y+10,6,8);
+            ctx.fillRect(player.x - cameraX, player.y, player.width, player.height);
         }
 
         function update() {
-            if(!isRunning) return;
-            
+            if (!isRunning) return;
+
             player.vx = 0;
-            if(keys['ArrowLeft'] || keys['a'] || keys['A']) player.vx = -player.speed;
-            if(keys['ArrowRight'] || keys['d'] || keys['D']) player.vx = player.speed;
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) player.vx = -player.speed;
+            if (keys['ArrowRight'] || keys['d'] || keys['D']) player.vx = player.speed;
             player.x += player.vx;
-            
+
             player.vy += player.gravity;
             player.y += player.vy;
             player.grounded = false;
-            
-            for(let p of platforms) {
-                if(player.x < p.x+p.w && player.x+player.width > p.x && 
-                   player.y < p.y+p.h && player.y+player.height > p.y) {
-                    if(player.vy > 0 && player.y+player.height-player.vy <= p.y) {
+
+            for (let p of platforms) {
+                if (player.x < p.x + p.w && player.x + player.width > p.x &&
+                    player.y < p.y + p.h && player.y + player.height > p.y) {
+                    if (player.vy > 0) {
                         player.y = p.y - player.height;
                         player.vy = 0;
                         player.grounded = true;
@@ -155,22 +82,22 @@
                     }
                 }
             }
-            
-            for(let h of hazards) {
-                if(player.x < h.x+h.w && player.x+player.width > h.x && 
-                   player.y < h.y+h.h && player.y+player.height > h.y) {
+
+            for (let h of hazards) {
+                if (player.x < h.x + h.w && player.x + player.width > h.x &&
+                    player.y < h.y + h.h && player.y + player.height > h.y) {
                     resetPlayer();
                     return;
                 }
             }
-            
-            if(player.x < goal.x+goal.w && player.x+player.width > goal.x && 
-               player.y < goal.y+goal.h && player.y+player.height > goal.y) {
+
+            if (player.x < goal.x + goal.w && player.x + player.width > goal.x &&
+                player.y < goal.y + goal.h && player.y + player.height > goal.y) {
                 endRun(true);
             }
-            
-            cameraX = Math.max(0, Math.min(player.x-200, 2000));
-            if(player.y > 600) resetPlayer();
+
+            cameraX = Math.max(0, Math.min(player.x - 200, 2000));
+            if (player.y > 650) resetPlayer();
         }
 
         function gameLoop() {
@@ -180,7 +107,7 @@
         }
 
         function startTimer() {
-            if(timerInterval) clearInterval(timerInterval);
+            if (timerInterval) clearInterval(timerInterval);
             gameTime = 0;
             document.getElementById('timer').textContent = '0.000';
             timerInterval = setInterval(() => {
@@ -191,7 +118,7 @@
 
         function startGame() {
             isRunning = true;
-            document.getElementById('status').textContent = 'Läuft!';
+            document.getElementById('status').innerHTML = 'Läuft!';
             resetPlayer();
             startTimer();
         }
@@ -203,50 +130,34 @@
         function endRun(success) {
             isRunning = false;
             clearInterval(timerInterval);
-            
-            if(success) {
-                const finalTime = parseFloat(gameTime.toFixed(3));
-                let msg = `🎉 Geschafft in ${finalTime}s!`;
-                
-                if (finalTime < bestTime) {
-                    bestTime = finalTime;
-                    saveBestTime(bestTime);
-                    msg += ' 🏆 NEUER REKORD!';
+            if (success) {
+                const time = parseFloat(gameTime.toFixed(3));
+                document.getElementById('status').innerHTML = `🎉 <strong>${time}s</strong>`;
+
+                if (currentPlayer !== "Unbekannt") {
+                    saveScore(currentPlayer, time);
                 }
-                
-                // WICHTIG: Score speichern
-                if (currentPlayer && currentPlayer !== "Unbekannt") {
-                    saveScore(currentPlayer, finalTime);
-                }
-                
-                document.getElementById('status').innerHTML = msg;
-                document.getElementById('bestTime').textContent = bestTime.toFixed(3);
-            } else {
-                document.getElementById('status').textContent = "Versucht's nochmal!";
             }
         }
 
         window.addEventListener('keydown', e => {
             keys[e.key] = true;
-            if((e.key === ' ' || e.key === 'Spacebar') && isRunning) {
+            if (e.key === ' ' && isRunning) {
                 e.preventDefault();
-                if(player.grounded) {
+                if (player.grounded) {
                     player.vy = player.jump;
                     player.grounded = false;
-                } else if(player.doubleJump) {
+                } else if (player.doubleJump) {
                     player.vy = player.jump * 0.9;
                     player.doubleJump = false;
                 }
             }
         });
-
         window.addEventListener('keyup', e => keys[e.key] = false);
 
-        // Init
         window.onload = () => {
             currentPlayer = localStorage.getItem('aceportal_current_player') || "Unbekannt";
-            document.getElementById('playerDisplay').textContent = currentPlayer;
-            document.getElementById('bestTime').textContent = bestTime === Infinity ? '-' : bestTime.toFixed(3);
+            document.getElementById('playerNameDisplay').textContent = currentPlayer;
             gameLoop();
         };
     </script>
