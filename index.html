@@ -5,172 +5,160 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AcePortal - Speedrun Parkour</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Press+Start+2P&display=swap');
-
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body {
-            background: #0a0a0f;
-            color: #e0e0ff;
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .container {
-            text-align: center;
-            max-width: 900px;
-            padding: 40px 20px;
-        }
-
-        .logo {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 4.2rem;
-            background: linear-gradient(90deg, #00ffcc, #ff00aa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
-        }
-
-        .tagline { font-size: 1.35rem; color: #a0a0ff; margin-bottom: 50px; }
-
-        .card {
-            background: rgba(20, 20, 45, 0.95);
-            border: 2px solid #00ffcc;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 0 60px rgba(0, 255, 204, 0.25);
-        }
-
-        input {
-            padding: 14px 20px;
-            font-size: 1.2rem;
-            width: 280px;
-            background: #1a1a2e;
-            border: 2px solid #00ffcc;
-            color: white;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-
-        .btn {
-            padding: 16px 50px;
-            font-size: 1.4rem;
-            background: linear-gradient(45deg, #00ffcc, #00ccaa);
-            color: #000;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: bold;
-            margin: 10px;
-        }
-
-        .btn:hover { transform: scale(1.05); }
-
-        .leaderboard {
-            margin-top: 50px;
-            text-align: left;
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .lb-title {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            color: #00ffcc;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #333;
-        }
-
-        th { color: #00ffcc; text-align: left; }
-        tr:hover { background: rgba(0, 255, 204, 0.1); }
+        body { margin:0; padding:0; display:flex; justify-content:center; align-items:center; height:100vh; background:#111; color:white; overflow:hidden; }
+        canvas { border:4px solid #0f0; image-rendering:pixelated; box-shadow:0 0 30px #0f0; }
+        #ui { position:absolute; top:15px; left:15px; z-index:10; background:rgba(0,0,0,0.9); padding:12px 20px; border-radius:10px; font-size:17px; }
+        button { padding:8px 16px; margin:5px 3px; background:#0f0; color:black; border:none; border-radius:5px; cursor:pointer; font-weight:bold; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">ACEPORTAL</div>
-        <p class="tagline">FAST • COMPETITIVE • ADDICTIVE</p>
-
-        <div class="card">
-            <h2 style="margin-bottom:20px; color:#00ffcc;">Speedrun Parkour</h2>
-            
-            <input type="text" id="playerName" placeholder="Dein Name" maxlength="16">
-            <br>
-            <button class="btn" onclick="startGame()">🎮 SPIEL STARTEN</button>
-        </div>
-
-        <div class="leaderboard">
-            <div class="lb-title">🏆 BESTENLISTE</div>
-            <table id="leaderboardTable">
-                <thead>
-                    <tr><th>Rang</th><th>Spieler</th><th>Zeit</th></tr>
-                </thead>
-                <tbody id="lbBody"></tbody>
-            </table>
-        </div>
-
-        <div style="margin-top:60px; color:#555; font-size:0.9rem;">
-            Rekorde werden lokal gespeichert
-        </div>
+    <div id="ui">
+        <div>Spieler: <strong id="playerNameDisplay">---</strong></div>
+        <div>Zeit: <span id="timer">0.000</span> s</div>
+        <div id="status">Bereit</div>
+        <button onclick="startGame()">RESTART</button>
+        <button onclick="window.location.href='index.html'">← Menü</button>
     </div>
 
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+
     <script>
-        let currentPlayer = "";
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let player = {x:80, y:380, width:30, height:40, vx:0, vy:0, speed:5.8, jump:-15.8, gravity:0.72, grounded:false, doubleJump:true};
+        let cameraX = 0, gameTime = 0, timerInterval, isRunning = false;
+        let currentPlayer = "Unbekannt";
+
+        let platforms = [{x:0,y:420,w:220,h:80},{x:280,y:340,w:110,h:20},{x:460,y:260,w:130,h:20},{x:650,y:370,w:90,h:20},{x:820,y:220,w:140,h:20},{x:1030,y:310,w:100,h:20},{x:1220,y:180,w:110,h:20},{x:1400,y:340,w:95,h:20},{x:1580,y:250,w:120,h:20},{x:1780,y:380,w:220,h:80}];
+        let goal = {x:1920, y:280, w:40, h:100};
+        let hazards = [{x:0, y:480, w:2500, h:40}];
+        let keys = {};
 
         function saveScore(name, time) {
             let scores = JSON.parse(localStorage.getItem('aceportal_scores') || '[]');
-            scores.push({ name: name, time: parseFloat(time), date: new Date().toISOString() });
-            scores.sort((a, b) => a.time - b.time);
-            localStorage.setItem('aceportal_scores', JSON.stringify(scores.slice(0, 50))); // Top 50
-            renderLeaderboard();
+            scores.push({name: name, time: parseFloat(time)});
+            scores.sort((a,b) => a.time - b.time);
+            localStorage.setItem('aceportal_scores', JSON.stringify(scores.slice(0,30)));
         }
 
-        function renderLeaderboard() {
-            const scores = JSON.parse(localStorage.getItem('aceportal_scores') || '[]');
-            const tbody = document.getElementById('lbBody');
-            tbody.innerHTML = '';
+        function draw() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = '#111133'; ctx.fillRect(0,0,canvas.width,canvas.height);
 
-            scores.forEach((entry, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><strong>#${index+1}</strong></td>
-                    <td>${entry.name}</td>
-                    <td><strong>${entry.time.toFixed(3)}s</strong></td>
-                `;
-                tbody.appendChild(row);
-            });
+            ctx.fillStyle = '#0a0';
+            for (let p of platforms) ctx.fillRect(p.x - cameraX, p.y, p.w, p.h);
 
-            if (scores.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#666;">Noch keine Rekorde</td></tr>`;
+            ctx.fillStyle = '#c00';
+            for (let h of hazards) ctx.fillRect(h.x - cameraX, h.y, h.w, h.h);
+
+            ctx.fillStyle = '#0f0';
+            ctx.fillRect(goal.x - cameraX, goal.y, goal.w, goal.h);
+
+            ctx.fillStyle = '#0ff';
+            ctx.fillRect(player.x - cameraX, player.y, player.width, player.height);
+        }
+
+        function update() {
+            if (!isRunning) return;
+
+            player.vx = 0;
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) player.vx = -player.speed;
+            if (keys['ArrowRight'] || keys['d'] || keys['D']) player.vx = player.speed;
+            player.x += player.vx;
+
+            player.vy += player.gravity;
+            player.y += player.vy;
+            player.grounded = false;
+
+            for (let p of platforms) {
+                if (player.x < p.x + p.w && player.x + player.width > p.x &&
+                    player.y < p.y + p.h && player.y + player.height > p.y) {
+                    if (player.vy > 0) {
+                        player.y = p.y - player.height;
+                        player.vy = 0;
+                        player.grounded = true;
+                        player.doubleJump = true;
+                    }
+                }
             }
+
+            for (let h of hazards) {
+                if (player.x < h.x + h.w && player.x + player.width > h.x &&
+                    player.y < h.y + h.h && player.y + player.height > h.y) {
+                    resetPlayer();
+                    return;
+                }
+            }
+
+            if (player.x < goal.x + goal.w && player.x + player.width > goal.x &&
+                player.y < goal.y + goal.h && player.y + player.height > goal.y) {
+                endRun(true);
+            }
+
+            cameraX = Math.max(0, Math.min(player.x - 200, 2000));
+            if (player.y > 650) resetPlayer();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            gameTime = 0;
+            document.getElementById('timer').textContent = '0.000';
+            timerInterval = setInterval(() => {
+                gameTime += 0.016;
+                document.getElementById('timer').textContent = gameTime.toFixed(3);
+            }, 16);
         }
 
         function startGame() {
-            const nameInput = document.getElementById('playerName').value.trim();
-            if (nameInput) {
-                currentPlayer = nameInput;
-                localStorage.setItem('aceportal_current_player', currentPlayer);
-            } else {
-                currentPlayer = "Player" + Math.floor(Math.random()*9999);
-            }
-            window.location.href = 'game.html';
+            isRunning = true;
+            document.getElementById('status').innerHTML = 'Läuft!';
+            resetPlayer();
+            startTimer();
         }
 
-        // Load saved name
+        function resetPlayer() {
+            player.x = 80; player.y = 380; player.vx = 0; player.vy = 0; cameraX = 0;
+        }
+
+        function endRun(success) {
+            isRunning = false;
+            clearInterval(timerInterval);
+            if (success) {
+                const time = parseFloat(gameTime.toFixed(3));
+                document.getElementById('status').innerHTML = `🎉 <strong>${time}s</strong>`;
+
+                if (currentPlayer !== "Unbekannt") {
+                    saveScore(currentPlayer, time);
+                }
+            }
+        }
+
+        window.addEventListener('keydown', e => {
+            keys[e.key] = true;
+            if (e.key === ' ' && isRunning) {
+                e.preventDefault();
+                if (player.grounded) {
+                    player.vy = player.jump;
+                    player.grounded = false;
+                } else if (player.doubleJump) {
+                    player.vy = player.jump * 0.9;
+                    player.doubleJump = false;
+                }
+            }
+        });
+        window.addEventListener('keyup', e => keys[e.key] = false);
+
         window.onload = () => {
-            const savedName = localStorage.getItem('aceportal_current_player');
-            if (savedName) document.getElementById('playerName').value = savedName;
-            renderLeaderboard();
+            currentPlayer = localStorage.getItem('aceportal_current_player') || "Unbekannt";
+            document.getElementById('playerNameDisplay').textContent = currentPlayer;
+            gameLoop();
         };
     </script>
 </body>
