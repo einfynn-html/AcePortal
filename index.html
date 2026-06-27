@@ -51,7 +51,7 @@
         .main {
             display: flex;
             justify-content: center;
-            gap: 60px;
+            gap: 50px;
             padding: 80px 40px;
             flex-wrap: wrap;
         }
@@ -63,7 +63,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 600;
             color: #aaa;
             cursor: pointer;
@@ -77,6 +77,7 @@
             box-shadow: 0 0 60px rgba(0, 255, 204, 0.3);
         }
         .game-card { color: #00ffcc; }
+        .jumper-card { color: #ffff00; }
         .scoreboard-card { color: #ff00cc; }
     </style>
 </head>
@@ -86,8 +87,11 @@
         <button class="name-btn" onclick="setName()" id="nameBtn">Namething</button>
     </div>
     <div class="main">
-        <div class="card game-card" onclick="startGame()">
-            GAME
+        <div class="card game-card" onclick="startClicker()">
+            CLICKER
+        </div>
+        <div class="card jumper-card" onclick="startJumper()">
+            JUMPER
         </div>
         <div class="card scoreboard-card" onclick="showScoreboard()">
             RANGLISTE
@@ -110,7 +114,7 @@
             }
         }
 
-        function startGame() {
+        function startClicker() {
             if (currentPlayer === "Player") {
                 alert("Bitte gib zuerst einen Namen ein!");
                 return;
@@ -118,11 +122,18 @@
             window.location.href = 'game.html';
         }
 
+        function startJumper() {
+            if (currentPlayer === "Player") {
+                alert("Bitte gib zuerst einen Namen ein!");
+                return;
+            }
+            window.location.href = 'jumper.html';
+        }
+
         function showScoreboard() {
             window.location.href = 'scoreboard.html';
         }
 
-        // Name beim Laden anzeigen
         window.onload = updateNameButton;
     </script>
 </body>
