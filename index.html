@@ -4,246 +4,174 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AcePortal - Speedrun Parkour</title>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Press+Start+2P&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
         body {
             background: #0a0a0f;
             color: #e0e0ff;
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            overflow: hidden;
-        }
-        header {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            background: rgba(10,10,20,0.95);
-            border-bottom: 1px solid #00ffcc;
-            padding: 15px 40px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            z-index: 100;
+            justify-content: center;
         }
+
+        .container {
+            text-align: center;
+            max-width: 900px;
+            padding: 40px 20px;
+        }
+
         .logo {
             font-family: 'Press Start 2P', cursive;
-            font-size: 1.8rem;
+            font-size: 4.2rem;
             background: linear-gradient(90deg, #00ffcc, #ff00aa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
         }
-        .user-area { display: flex; align-items: center; gap: 12px; }
-        .user-name { font-weight: 500; cursor: pointer; }
-        .logout-btn {
-            padding: 6px 14px;
-            background: #ff4444;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        .container {
-            padding-top: 100px;
-            max-width: 1100px;
-            margin: 0 auto;
-            display: flex;
-            gap: 40px;
-            padding: 120px 40px 40px;
-        }
-        .game-section { flex: 1; }
-        .leaderboard {
-            width: 380px;
-            background: rgba(20,20,40,0.95);
+
+        .tagline { font-size: 1.35rem; color: #a0a0ff; margin-bottom: 50px; }
+
+        .card {
+            background: rgba(20, 20, 45, 0.95);
             border: 2px solid #00ffcc;
             border-radius: 20px;
-            padding: 25px;
+            padding: 40px;
+            box-shadow: 0 0 60px rgba(0, 255, 204, 0.25);
         }
-        .rank-item {
-            display: flex;
-            align-items: center;
-            background: rgba(0,0,0,0.3);
-            margin: 8px 0;
-            padding: 12px 15px;
-            border-radius: 10px;
+
+        input {
+            padding: 14px 20px;
+            font-size: 1.2rem;
+            width: 280px;
+            background: #1a1a2e;
+            border: 2px solid #00ffcc;
+            color: white;
+            border-radius: 8px;
+            margin: 20px 0;
         }
-        .my-score { border: 2px solid #00ffcc; background: rgba(0,255,100,0.1) !important; }
+
         .btn {
-            display: inline-block;
-            padding: 18px 60px;
-            font-size: 1.6rem;
-            font-weight: 700;
+            padding: 16px 50px;
+            font-size: 1.4rem;
             background: linear-gradient(45deg, #00ffcc, #00ccaa);
             color: #000;
             border: none;
             border-radius: 12px;
             cursor: pointer;
-            margin: 20px 0;
+            font-weight: bold;
+            margin: 10px;
         }
+
+        .btn:hover { transform: scale(1.05); }
+
+        .leaderboard {
+            margin-top: 50px;
+            text-align: left;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .lb-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #00ffcc;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #333;
+        }
+
+        th { color: #00ffcc; text-align: left; }
+        tr:hover { background: rgba(0, 255, 204, 0.1); }
     </style>
 </head>
 <body>
-    <header>
-        <div class="logo">ACEPORTAL</div>
-        <div class="user-area">
-            <span id="user-name" class="user-name" onclick="showProfile()">Gast</span>
-            <button id="logout-btn" class="logout-btn" onclick="signOut()" style="display:none;">Abmelden</button>
-        </div>
-    </header>
-
     <div class="container">
-        <div class="game-section">
-            <h1 style="font-size:4rem; margin-bottom:10px;">SPEEDRUN PARKOUR</h1>
-            <p style="font-size:1.4rem; color:#a0a0ff; margin-bottom:40px;">Wie schnell kannst du die Lava überleben?</p>
-            <a href="game.html" class="btn">JETZT SPIELEN →</a>
+        <div class="logo">ACEPORTAL</div>
+        <p class="tagline">FAST • COMPETITIVE • ADDICTIVE</p>
+
+        <div class="card">
+            <h2 style="margin-bottom:20px; color:#00ffcc;">Speedrun Parkour</h2>
+            
+            <input type="text" id="playerName" placeholder="Dein Name" maxlength="16">
+            <br>
+            <button class="btn" onclick="startGame()">🎮 SPIEL STARTEN</button>
         </div>
 
         <div class="leaderboard">
-            <h2 style="color:#00ffcc; text-align:center; margin-bottom:20px;">🏆 Rangliste</h2>
-            <div id="leaderboard"></div>
+            <div class="lb-title">🏆 BESTENLISTE</div>
+            <table id="leaderboardTable">
+                <thead>
+                    <tr><th>Rang</th><th>Spieler</th><th>Zeit</th></tr>
+                </thead>
+                <tbody id="lbBody"></tbody>
+            </table>
         </div>
-    </div>
 
-    <!-- Login Modal -->
-    <div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:200; align-items:center; justify-content:center;">
-        <div style="background:#1a1a2e; padding:40px; border-radius:20px; width:420px;">
-            <h2>Account</h2>
-            
-            <input type="email" id="email" placeholder="E-Mail-Adresse" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
-            <input type="password" id="password" placeholder="Passwort" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
-            <input type="text" id="nickname" placeholder="Nickname (Pflicht)" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
-            
-            <button onclick="signUp()" style="width:100%; padding:14px; background:#00ff88; color:black; border:none; border-radius:8px; margin:15px 0;">Registrieren</button>
-            <button onclick="signIn()" style="width:100%; padding:14px; background:#555; color:white; border:none; border-radius:8px;">Anmelden</button>
-            <button onclick="guestLogin()" style="width:100%; padding:14px; background:#666; color:white; border:none; border-radius:8px; margin-top:10px;">Als Gast spielen</button>
-            
-            <button onclick="closeModal()" style="margin-top:15px; color:#aaa;">Schließen</button>
+        <div style="margin-top:60px; color:#555; font-size:0.9rem;">
+            Rekorde werden lokal gespeichert
         </div>
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyA8UYsuQGkoPO6jqMgXtL0zX-iNmvA5pA0",
-            authDomain: "https://console.firebase.google.com/u/0/project/aceportal-web/overview",
-            projectId: "aceportal-xyz",
-            storageBucket: "aceportal-xyz.appspot.com",
-            messagingSenderId: "123456789012",
-            appId: "1:123456789012:web:xxxxxxxxxxxxxxxx"
-        };
+        let currentPlayer = "";
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-
-        let currentUser = null;
-        let myBestTime = localStorage.getItem('speedrunBest') ? parseFloat(localStorage.getItem('speedrunBest')) : null;
-
-        function showLoginModal() {
-            document.getElementById('loginModal').style.display = 'flex';
+        function saveScore(name, time) {
+            let scores = JSON.parse(localStorage.getItem('aceportal_scores') || '[]');
+            scores.push({ name: name, time: parseFloat(time), date: new Date().toISOString() });
+            scores.sort((a, b) => a.time - b.time);
+            localStorage.setItem('aceportal_scores', JSON.stringify(scores.slice(0, 50))); // Top 50
+            renderLeaderboard();
         }
 
-        function closeModal() {
-            document.getElementById('loginModal').style.display = 'none';
-        }
+        function renderLeaderboard() {
+            const scores = JSON.parse(localStorage.getItem('aceportal_scores') || '[]');
+            const tbody = document.getElementById('lbBody');
+            tbody.innerHTML = '';
 
-        function signUp() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const nickname = document.getElementById('nickname').value.trim();
-
-            if (!nickname) return alert("Nickname ist Pflicht!");
-            if (!email || !password) return alert("E-Mail und Passwort erforderlich!");
-
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(result => {
-                    result.user.updateProfile({ displayName: nickname });
-                    currentUser = result.user;
-                    document.getElementById('user-name').textContent = nickname;
-                    document.getElementById('logout-btn').style.display = 'inline-block';
-                    closeModal();
-                    alert("Erfolgreich registriert!");
-                    updateLeaderboard();
-                })
-                .catch(err => alert("Fehler: " + err.message));
-        }
-
-        function signIn() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            auth.signInWithEmailAndPassword(email, password)
-                .then(result => {
-                    currentUser = result.user;
-                    document.getElementById('user-name').textContent = result.user.displayName || "Spieler";
-                    document.getElementById('logout-btn').style.display = 'inline-block';
-                    closeModal();
-                    alert("Erfolgreich angemeldet!");
-                    updateLeaderboard();
-                })
-                .catch(err => alert("Fehler: " + err.message));
-        }
-
-        function guestLogin() {
-            const nickname = document.getElementById('nickname').value.trim() || "Spieler";
-            currentUser = { displayName: nickname + " (Guest)", isGuest: true };
-            document.getElementById('user-name').textContent = nickname + " (Guest)";
-            closeModal();
-            updateLeaderboard();
-        }
-
-        function signOut() {
-            auth.signOut().then(() => {
-                currentUser = null;
-                document.getElementById('user-name').textContent = "Gast";
-                document.getElementById('logout-btn').style.display = 'none';
-                updateLeaderboard();
-            });
-        }
-
-        function showProfile() {
-            if (currentUser) {
-                const newName = prompt("Neuen Nickname eingeben:", currentUser.displayName || "");
-                if (newName && newName.trim() !== "") {
-                    auth.currentUser.updateProfile({ displayName: newName.trim() }).then(() => {
-                        currentUser.displayName = newName.trim();
-                        document.getElementById('user-name').textContent = newName.trim();
-                        updateLeaderboard();
-                    });
-                }
-            } else {
-                showLoginModal();
-            }
-        }
-
-        function updateLeaderboard() {
-            const container = document.getElementById('leaderboard');
-            container.innerHTML = '';
-
-            if (myBestTime) {
-                const div = document.createElement('div');
-                div.className = 'rank-item my-score';
-                div.innerHTML = `
-                    <div class="rank-pos">★</div>
-                    <div class="rank-name">${currentUser ? (currentUser.displayName || 'Du') : 'Du'}</div>
-                    <div class="rank-time">${myBestTime.toFixed(2)}s</div>
+            scores.forEach((entry, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>#${index+1}</strong></td>
+                    <td>${entry.name}</td>
+                    <td><strong>${entry.time.toFixed(3)}s</strong></td>
                 `;
-                container.appendChild(div);
-            } else {
-                container.innerHTML = `<p style="text-align:center; color:#666; padding:40px;">Noch keine Zeit vorhanden.<br>Spiele zuerst!</p>`;
+                tbody.appendChild(row);
+            });
+
+            if (scores.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#666;">Noch keine Rekorde</td></tr>`;
             }
         }
 
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('user-name').textContent = user.displayName || user.email;
-                document.getElementById('logout-btn').style.display = 'inline-block';
-                updateLeaderboard();
+        function startGame() {
+            const nameInput = document.getElementById('playerName').value.trim();
+            if (nameInput) {
+                currentPlayer = nameInput;
+                localStorage.setItem('aceportal_current_player', currentPlayer);
+            } else {
+                currentPlayer = "Player" + Math.floor(Math.random()*9999);
             }
-        });
+            window.location.href = 'game.html';
+        }
 
-        window.onload = updateLeaderboard;
+        // Load saved name
+        window.onload = () => {
+            const savedName = localStorage.getItem('aceportal_current_player');
+            if (savedName) document.getElementById('playerName').value = savedName;
+            renderLeaderboard();
+        };
     </script>
 </body>
 </html>
